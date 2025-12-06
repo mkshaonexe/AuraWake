@@ -103,7 +103,72 @@ class AlarmService : Service() {
         startActivity(intent)
     }
 
-    // ... (createNotificationChannel, startRinging, startVibration remain same) ...
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Alarm Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Alarm notifications with sound"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 500, 200, 500)
+                setSound(
+                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                setBypassDnd(true)
+            }
+            
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun startRinging() {
+        try {
+            val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(this@AlarmService, alarmUri)
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                isLooping = true
+                prepare()
+                start()
+            }
+            Log.d("AlarmService", "🔊 Alarm sound started")
+        } catch (e: Exception) {
+            Log.e("AlarmService", "❌ Failed to play alarm sound", e)
+        }
+    }
+
+    private fun startVibration() {
+        vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(VIBRATOR_SERVICE) as Vibrator
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 500, 200, 500), 0))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator?.vibrate(longArrayOf(0, 500, 200, 500), 0)
+        }
+        Log.d("AlarmService", "📳 Vibration started")
+    }
 
     private fun createNotification(alarmId: String?, challengeType: String?): Notification {
         val fullScreenIntent = Intent(this, MainActivity::class.java).apply {

@@ -124,15 +124,13 @@ fun TypingChallenge(
         BasicTextField(
             value = userText,
             onValueChange = { newValue ->
-                // Only allow typing if it matches the target so far (strict mode) or just allow free typing?
-                // Screenshot shows "Liv" with cursor, implies free typing or valid prefix.
-                // Let's allow typing but cap length.
                 if (newValue.length <= targetPhrase.length) {
                     userText = newValue
                 }
             },
-            focusRequester = focusRequester,
-            modifier = Modifier.size(1.dp), // Hidden but focused
+            modifier = Modifier
+                .size(1.dp)
+                .focusRequester(focusRequester), // Attached correctly to modifier
             cursorBrush = SolidColor(Color.Transparent),
             textStyle = androidx.compose.ui.text.TextStyle(color = Color.Transparent),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
