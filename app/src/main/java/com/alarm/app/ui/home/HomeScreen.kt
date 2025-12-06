@@ -150,27 +150,27 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp) // Reduced spacing
             ) {
                 // Header item for "Ring in..."
                 item {
                     if (nextAlarmString.isNotEmpty()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = 4.dp) // Reduced padding
                         ) {
                             Text(
                                 text = nextAlarmString,
                                 color = Color.White,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
+                                fontSize = 14.sp // Slightly smaller header
                             )
                             Icon(
                                 Icons.Default.KeyboardArrowRight, 
                                 contentDescription = null, 
                                 tint = Color.Gray,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(16.dp) // Smaller icon
                             )
                         }
                     }
@@ -224,8 +224,6 @@ private fun getNextAlarmString(alarms: List<Alarm>): String {
             set(Calendar.SECOND, 0)
         }
         
-        // If alarm time is earlier today, assume it's for tomorrow.
-        // NOTE: This basic logic doesn't fully account for days of week, but fits the "next ring" estimate for simple daily alarms or immediate next occurrence.
         if (alarmTime.before(now)) {
             alarmTime.add(Calendar.DAY_OF_YEAR, 1)
         }
@@ -265,7 +263,7 @@ fun AlarmCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp) // Reduced vertical padding
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -274,7 +272,7 @@ fun AlarmCard(
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = String.format("%02d:%02d", alarm.hour, alarm.minute),
-                        fontSize = 42.sp,
+                        fontSize = 32.sp, // Reduced font size
                         fontWeight = FontWeight.Bold,
                         color = if (alarm.isEnabled) Color.White else Color.Gray
                     )
