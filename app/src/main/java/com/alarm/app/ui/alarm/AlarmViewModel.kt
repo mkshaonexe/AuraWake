@@ -66,5 +66,18 @@ class AlarmViewModel(
             }
         }
     }
+
+    fun duplicateAlarm(alarm: Alarm) {
+        viewModelScope.launch {
+            val newAlarm = alarm.copy(
+                id = UUID.randomUUID().toString(),
+                isEnabled = false // Duplicated alarms usually start off? Or match original? Let's default to match original or off. Reference implies creating a new entry. Let's set to off to avoid double scheduling immediately if user doesn't want. Or true if copy. Let's stick to true to match user intent of "duplicating".
+            )
+            repository.insertAlarm(newAlarm)
+            if (newAlarm.isEnabled) {
+                scheduler.schedule(newAlarm)
+            }
+        }
+    }
 }
 
