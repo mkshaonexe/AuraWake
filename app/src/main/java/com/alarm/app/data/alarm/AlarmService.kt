@@ -58,14 +58,25 @@ class AlarmService : Service() {
             }
             "ACTION_DISMISS" -> {
                 Log.d("AlarmService", "❌ Dismiss clicked")
-                val fullScreenIntent = Intent(this, MainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    putExtra("ALARM_ID", alarmId)
-                    putExtra("CHALLENGE_TYPE", challengeType)
-                    putExtra("SHOW_ALARM_SCREEN", true)
-                    putExtra("START_CHALLENGE", true) // Signal to start challenge immediately
+                
+                // Check if there is a challenge
+                val hasChallenge = challengeType != null && challengeType != "NONE"
+                
+                if (hasChallenge) {
+                    Log.d("AlarmService", "🛡️ Challenge exists ($challengeType), forcing app open")
+                    val fullScreenIntent = Intent(this, MainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        putExtra("ALARM_ID", alarmId)
+                        putExtra("CHALLENGE_TYPE", challengeType)
+                        putExtra("SHOW_ALARM_SCREEN", true)
+                        putExtra("START_CHALLENGE", true) // Signal to start challenge immediately
+                    }
+                    startActivity(fullScreenIntent)
+                    // Do NOT stopSelf() here, let the UI handle it after challenge
+                } else {
+                    Log.d("AlarmService", "✅ No challenge, stopping service")
+                    stopSelf()
                 }
-                startActivity(fullScreenIntent)
                 return START_REDELIVER_INTENT
             }
         }
@@ -76,15 +87,39 @@ class AlarmService : Service() {
         startRinging()
         startVibration()
         
+        // Acquire wake lock to ensure screen turns on (critical for Android 10+)
+        val powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        val wakeLock = powerManager.newWakeLock(
+            android.os.PowerManager.FULL_WAKE_LOCK or 
+            android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP or
+            android.os.PowerManager.ON_AFTER_RELEASE,
+            "AlarmApp:AlarmScreenWakeLock"
+        )
+        wakeLock.acquire(10 * 1000L) // Hold for 10 seconds to allow activity launch
+        
         val fullScreenIntent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or 
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            )
             putExtra("ALARM_ID", alarmId)
             putExtra("CHALLENGE_TYPE", challengeType)
             putExtra("SHOW_ALARM_SCREEN", true)
         }
-        startActivity(fullScreenIntent)
         
-        Log.d("AlarmService", "✅ MainActivity launched with alarm screen")
+        try {
+            startActivity(fullScreenIntent)
+            Log.d("AlarmService", "✅ MainActivity launched with alarm screen")
+        } catch (e: Exception) {
+            Log.e("AlarmService", "❌ Failed to start MainActivity", e)
+        } finally {
+            // Release wake lock after a short delay
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                if (wakeLock.isHeld) wakeLock.release()
+            }, 5000)
+        }
 
         return START_REDELIVER_INTENT
     }
@@ -179,7 +214,12 @@ class AlarmService : Service() {
 
     private fun createNotification(alarmId: String?, challengeType: String?): Notification {
         val fullScreenIntent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or 
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            )
             putExtra("ALARM_ID", alarmId)
             putExtra("CHALLENGE_TYPE", challengeType)
             putExtra("SHOW_ALARM_SCREEN", true)
@@ -191,42 +231,19 @@ class AlarmService : Service() {
             fullScreenIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        
-        // Dismiss Action 
-        val dismissIntent = Intent(this, MainActivity::class.java).apply {
-            action = "ACTION_DISMISS"
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            putExtra("ALARM_ID", alarmId)
-            putExtra("CHALLENGE_TYPE", challengeType)
-            putExtra("SHOW_ALARM_SCREEN", true)
-        }
-        val dismissPendingIntent = PendingIntent.getActivity(
-            this, 1, dismissIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
 
-        // Snooze Action 
-        val snoozeIntent = Intent(this, com.alarm.app.data.alarm.SnoozeReceiver::class.java).apply {
-            action = "ACTION_SNOOZE"
-            putExtra("ALARM_ID", alarmId)
-        }
-        val snoozePendingIntent = PendingIntent.getBroadcast(
-            this, 2, snoozeIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
+        // Notification WITHOUT Snooze/Dismiss buttons - forces user to open the full-screen UI
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("⏰ Alarm Ringing!")
-            .setContentText("Wake Up! Solve the challenge to dismiss!")
+            .setContentText("Tap to open alarm screen")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            // Use setFullScreenIntent to launch the activity immediately if device is locked
-            .setFullScreenIntent(pendingIntent, true)
-            .setContentIntent(pendingIntent)
+            .setFullScreenIntent(pendingIntent, true) // Opens alarm screen on lock screen
+            .setContentIntent(pendingIntent) // Opens alarm screen when notification is tapped
             .setOngoing(true)
             .setAutoCancel(false)
-            .addAction(R.drawable.ic_launcher_foreground, "Snooze (5m)", snoozePendingIntent) 
-            .addAction(R.drawable.ic_launcher_foreground, "Dismiss", dismissPendingIntent) 
             .build()
     }
     
