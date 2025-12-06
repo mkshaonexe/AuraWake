@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -40,12 +41,13 @@ fun OverlayPermissionScreen(
             .fillMaxSize()
             .background(Color(0xFF1C1C1E)) // Dark background
     ) {
-        // Close button (optional, based on common UI patterns, though not explicitly in screenshot, safe to add for navigation)
+        // Close button
         IconButton(
             onClick = onClose,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
+                .statusBarsPadding() // Add padding for status bar
         ) {
             Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
         }
@@ -53,7 +55,8 @@ fun OverlayPermissionScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(24.dp)
+                .statusBarsPadding(), // Add padding for status bar
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
