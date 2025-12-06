@@ -25,34 +25,32 @@ fun TrackerSection() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
             .background(Color(0xFF0D0D0D), RoundedCornerShape(16.dp)) // Very dark background
-            .padding(16.dp)
+            .padding(12.dp) // Reduced padding
     ) {
-        // Heatmap Grid (No header/settings/years as per new request)
         HeatmapGrid()
     }
 }
 
 @Composable
 fun HeatmapGrid() {
-    // Mock data: 7 rows (days), ~16 columns (weeks)
+    // Mock data: 7 rows (days), ~20 columns to fill space better when small
     val rows = 7
-    val columns = 16
+    val columns = 20
 
     Column {
         // Month Labels
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 30.dp, bottom = 8.dp), // Offset for day labels
+                .padding(start = 24.dp, bottom = 6.dp), // Reduced offset and padding
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Dec", color = Color.Gray, fontSize = 10.sp)
-            Text("Jan", color = Color.Gray, fontSize = 10.sp)
-            Text("Feb", color = Color.Gray, fontSize = 10.sp)
-            Text("Mar", color = Color.Gray, fontSize = 10.sp)
-            Text("Apr", color = Color.Gray, fontSize = 10.sp)
+            Text("Dec", color = Color.Gray, fontSize = 9.sp)
+            Text("Jan", color = Color.Gray, fontSize = 9.sp)
+            Text("Feb", color = Color.Gray, fontSize = 9.sp)
+            Text("Mar", color = Color.Gray, fontSize = 9.sp)
+            Text("Apr", color = Color.Gray, fontSize = 9.sp)
         }
 
         Row {
@@ -60,21 +58,21 @@ fun HeatmapGrid() {
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
-                    .height(100.dp) // Match grid height roughly
-                    .padding(end = 8.dp)
+                    .height(80.dp) // Significantly reduced height
+                    .padding(end = 6.dp)
             ) {
-                Text("Mon", color = Color.Gray, fontSize = 10.sp)
-                Text("Wed", color = Color.Gray, fontSize = 10.sp)
-                Text("Fri", color = Color.Gray, fontSize = 10.sp)
+                Text("Mon", color = Color.Gray, fontSize = 9.sp)
+                Text("Wed", color = Color.Gray, fontSize = 9.sp)
+                Text("Fri", color = Color.Gray, fontSize = 9.sp)
             }
 
             // Grid
             Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(3.dp) // Tighter vertical spacing
             ) {
                 repeat(rows) { 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(3.dp) // Tighter horizontal spacing
                     ) {
                         repeat(columns) { 
                             // Randomize active state
@@ -83,8 +81,8 @@ fun HeatmapGrid() {
 
                             Box(
                                 modifier = Modifier
-                                    .size(10.dp)
-                                    .clip(RoundedCornerShape(3.dp)) // Slightly rounder squares
+                                    .size(8.dp) // Smaller dots
+                                    .clip(RoundedCornerShape(2.dp))
                                     .background(color)
                             )
                         }
