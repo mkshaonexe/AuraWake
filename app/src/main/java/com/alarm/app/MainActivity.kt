@@ -1,5 +1,6 @@
 package com.alarm.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -37,12 +38,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // Handle notification click / service launch
-                val intent = intent
-                val startDestination = if (intent.getBooleanExtra("SHOW_ALARM_SCREEN", false)) {
-                    "ringing"
-                } else {
-                    "home"
-                }
+                val startDestination = determineStartDestination(intent)
 
                 NavHost(navController = navController, startDestination = startDestination) {
                     composable("home") {
@@ -60,6 +56,25 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+    
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent) // Update the intent for onResume or recomposition if needed
+        // Note: In Compose, handling new intents navigation usually requires observing the intent or a side effect.
+        // For simplicity, if we receive a ringing intent while alive, we could restart activity or navigation.
+        if (intent.getBooleanExtra("SHOW_ALARM_SCREEN", false)) {
+            // Force recreation to catch the new start destination or handle navigation
+            recreate()
+        }
+    }
+
+    private fun determineStartDestination(intent: Intent?): String {
+        return if (intent?.getBooleanExtra("SHOW_ALARM_SCREEN", false) == true) {
+            "ringing"
+        } else {
+            "home"
         }
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.alarm.app.data.alarm.AlarmService
+import com.alarm.app.data.alarm.SnoozeReceiver
 import com.alarm.app.data.model.ChallengeType
 import java.util.Calendar
 
@@ -45,8 +48,24 @@ fun AlarmRingingScreen(
     
     // Function to stop alarm and navigate home
     val dismissAlarm: () -> Unit = {
-        // Stop the AlarmService (stops sound + vibration)
         context.stopService(Intent(context, AlarmService::class.java))
+        navController.navigate("home") { 
+            popUpTo("ringing") { inclusive = true } 
+        }
+    }
+    
+    // Function to snooze
+    val snoozeAlarm: () -> Unit = {
+        if (alarmId != null) {
+            val intent = Intent(context, SnoozeReceiver::class.java).apply {
+                action = "ACTION_SNOOZE"
+                putExtra("ALARM_ID", alarmId)
+            }
+            context.sendBroadcast(intent)
+        } else {
+            // For preview/testing without ID -> just stop service
+            context.stopService(Intent(context, AlarmService::class.java))
+        }
         navController.navigate("home") { 
             popUpTo("ringing") { inclusive = true } 
         }
@@ -58,7 +77,7 @@ fun AlarmRingingScreen(
             ChallengeType.SHAKE -> com.alarm.app.ui.ring.challenges.ShakeChallenge(onCompleted = dismissAlarm)
             ChallengeType.TYPING -> com.alarm.app.ui.ring.challenges.TypingChallenge(onCompleted = dismissAlarm)
             ChallengeType.QR -> com.alarm.app.ui.ring.challenges.QRChallenge(onCompleted = dismissAlarm)
-            else -> dismissAlarm() // If NONE, just dismiss
+            else -> dismissAlarm() 
         }
     } else {
         Column(
@@ -86,17 +105,34 @@ fun AlarmRingingScreen(
             
             Spacer(modifier = Modifier.height(48.dp))
             
-            Button(
-                onClick = {
-                    val randomChallenge = listOf(ChallengeType.MATH, ChallengeType.SHAKE, ChallengeType.TYPING).random()
-                    challengeStep = randomChallenge
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("DISMISS (Start Challenge)", fontSize = 24.sp)
+                Button(
+                    onClick = {
+                        val randomChallenge = listOf(ChallengeType.MATH, ChallengeType.SHAKE, ChallengeType.TYPING).random()
+                        challengeStep = randomChallenge
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text("DISMISS (Start Challenge)", fontSize = 18.sp)
+                }
+                
+                OutlinedButton(
+                    onClick = snoozeAlarm,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text("Snooze (5 min)", fontSize = 18.sp)
+                }
             }
         }
     }

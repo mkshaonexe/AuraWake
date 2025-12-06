@@ -61,6 +61,11 @@
              </intent-filter>
         </receiver>
         
+        <receiver 
+            android:name=".data.alarm.SnoozeReceiver"
+            android:exported="false">
+        </receiver>
+
         <service 
             android:name=".data.alarm.AlarmService" 
             android:foregroundServiceType="mediaPlayback"
