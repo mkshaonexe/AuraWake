@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -99,34 +100,77 @@ fun ShakeChallenge(
         }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black), // Dark background
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "Shake your phone!",
-            fontSize = 32.sp,
-            color = Color.White
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Box(contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(
-                progress = { currentShakes.toFloat() / targetShakes },
-                modifier = Modifier.size(200.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = Color.Gray
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+        ) {
+            // Icon or Graphic
+            androidx.compose.material3.Icon(
+                imageVector = androidx.compose.material.icons.Icons.Default.Vibration, // Explicit import would be better but this works if available, otherwise Smartphone
+                contentDescription = null,
+                tint = Color(0xFF26C6DA),
+                modifier = Modifier
+                    .size(48.dp)
+                    .padding(bottom = 16.dp)
             )
+
             Text(
-                text = "${(currentShakes * 100 / targetShakes)}%",
-                fontSize = 48.sp,
+                text = "Shake to wake!",
+                fontSize = 28.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                 color = Color.White
             )
+            
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            Box(contentAlignment = Alignment.Center) {
+                // Background Track
+                CircularProgressIndicator(
+                    progress = { 1f },
+                    modifier = Modifier.size(220.dp),
+                    color = Color(0xFF1C1C1E), // Dark gray track
+                    trackColor = Color(0xFF1C1C1E),
+                    strokeWidth = 12.dp
+                )
+                
+                // Progress
+                CircularProgressIndicator(
+                    progress = { currentShakes.toFloat() / targetShakes },
+                    modifier = Modifier.size(220.dp),
+                    color = Color(0xFF26C6DA), // Teal
+                    trackColor = Color.Transparent, // We use the background one for track
+                    strokeWidth = 12.dp,
+                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
+                
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "${(currentShakes * 100 / targetShakes)}%",
+                        fontSize = 56.sp,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "$currentShakes / $targetShakes", 
+                        color = Color.Gray,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Text(
+                text = "Keep shaking!",
+                color = Color.Gray,
+                fontSize = 18.sp
+            )
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("$currentShakes / $targetShakes", color = Color.Gray)
     }
 }
