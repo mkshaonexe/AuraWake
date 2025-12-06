@@ -25,8 +25,8 @@ fun TrackerSection() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF0D0D0D), RoundedCornerShape(16.dp)) // Very dark background
-            .padding(12.dp) // Reduced padding
+            .background(Color.Black, RoundedCornerShape(16.dp)) // Pure black background for the card area if needed, or match parent
+            .padding(vertical = 12.dp)
     ) {
         HeatmapGrid()
     }
@@ -34,56 +34,65 @@ fun TrackerSection() {
 
 @Composable
 fun HeatmapGrid() {
-    // Mock data: 7 rows (days), ~20 columns to fill space better when small
+    // Reference image shows roughly 7 rows (Mon-Sun) and about 20-22 columns
     val rows = 7
-    val columns = 20
+    val columns = 22
 
-    Column {
+    Column(modifier = Modifier.fillMaxWidth()) {
         // Month Labels
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, bottom = 6.dp), // Reduced offset and padding
+                .padding(start = 28.dp, bottom = 8.dp, end = 8.dp), // Align with grid
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Dec", color = Color.Gray, fontSize = 9.sp)
-            Text("Jan", color = Color.Gray, fontSize = 9.sp)
-            Text("Feb", color = Color.Gray, fontSize = 9.sp)
-            Text("Mar", color = Color.Gray, fontSize = 9.sp)
-            Text("Apr", color = Color.Gray, fontSize = 9.sp)
+            val months = listOf("Dec", "Jan", "Feb", "Mar", "Apr")
+            months.forEach { month ->
+                Text(
+                    text = month, 
+                    color = Color.Gray, 
+                    fontSize = 10.sp
+                )
+            }
         }
 
-        Row {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             // Day Labels Column
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
-                    .height(80.dp) // Significantly reduced height
-                    .padding(end = 6.dp)
+                    .height(96.dp) // Match height of grid roughly (8dp size + 4dp space) * 7
+                    .padding(end = 8.dp)
             ) {
-                Text("Mon", color = Color.Gray, fontSize = 9.sp)
-                Text("Wed", color = Color.Gray, fontSize = 9.sp)
-                Text("Fri", color = Color.Gray, fontSize = 9.sp)
+                Text("Mon", color = Color.Gray, fontSize = 10.sp)
+                Text("Wed", color = Color.Gray, fontSize = 10.sp)
+                Text("Fri", color = Color.Gray, fontSize = 10.sp)
             }
 
             // Grid
             Column(
-                verticalArrangement = Arrangement.spacedBy(3.dp) // Tighter vertical spacing
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                repeat(rows) { 
+                repeat(rows) { rowIndex ->
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(3.dp) // Tighter horizontal spacing
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        repeat(columns) { 
-                            // Randomize active state
-                            val isActive = remember { Random.nextFloat() > 0.7 } 
-                            val color = if (isActive) Color(0xFF26C6DA) else Color(0xFF1E1E1E) // Teal vs Dark Grey
+                        repeat(columns) { colIndex ->
+                            // Randomize active state to mimic the scattered look
+                            // In a real app, this would be based on actual data
+                            val isActive = remember { Random.nextFloat() > 0.6 } 
+                            
+                            // Specific color from reference (Teal/Cyan) and Dark Grey
+                            val activeColor = Color(0xFF26C6DA) // Cyan/Teal
+                            val inactiveColor = Color(0xFF1C1C1E) // Dark Grey matching card backgrounds
 
                             Box(
                                 modifier = Modifier
-                                    .size(8.dp) // Smaller dots
-                                    .clip(RoundedCornerShape(2.dp))
-                                    .background(color)
+                                    .size(10.dp) // Slightly larger dots
+                                    .clip(RoundedCornerShape(3.dp)) // Soft square
+                                    .background(if (isActive) activeColor else inactiveColor)
                             )
                         }
                     }
