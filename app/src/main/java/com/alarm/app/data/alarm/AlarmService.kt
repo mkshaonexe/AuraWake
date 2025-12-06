@@ -25,10 +25,16 @@ class AlarmService : Service() {
     
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
+    
+    // Volume enforcement - prevents user from lowering alarm volume
+    private var volumeEnforcementHandler: android.os.Handler? = null
+    private var volumeEnforcementRunnable: Runnable? = null
+    private var maxAlarmVolume: Int = 0
 
     companion object {
         const val CHANNEL_ID = "ALARM_CHANNEL"
         const val NOTIFICATION_ID = 1001
+        const val VOLUME_CHECK_INTERVAL_MS = 500L // Check every 500ms
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -169,9 +175,12 @@ class AlarmService : Service() {
         try {
             // Set volume to maximum for alarm stream
             val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
-            Log.d("AlarmService", "🔊 Alarm volume set to max: $maxVolume")
+            maxAlarmVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarmVolume, 0)
+            Log.d("AlarmService", "🔊 Alarm volume set to max: $maxAlarmVolume")
+            
+            // Start volume enforcement - prevents user from lowering volume
+            startVolumeEnforcement(audioManager)
             
             val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
@@ -192,6 +201,33 @@ class AlarmService : Service() {
         } catch (e: Exception) {
             Log.e("AlarmService", "❌ Failed to play alarm sound", e)
         }
+    }
+    
+    private fun startVolumeEnforcement(audioManager: AudioManager) {
+        volumeEnforcementHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        volumeEnforcementRunnable = object : Runnable {
+            override fun run() {
+                try {
+                    val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
+                    if (currentVolume < maxAlarmVolume) {
+                        audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarmVolume, 0)
+                        Log.d("AlarmService", "🔒 Volume enforced: $currentVolume -> $maxAlarmVolume")
+                    }
+                } catch (e: Exception) {
+                    Log.e("AlarmService", "Volume enforcement error", e)
+                }
+                volumeEnforcementHandler?.postDelayed(this, VOLUME_CHECK_INTERVAL_MS)
+            }
+        }
+        volumeEnforcementHandler?.post(volumeEnforcementRunnable!!)
+        Log.d("AlarmService", "🔒 Volume enforcement started")
+    }
+    
+    private fun stopVolumeEnforcement() {
+        volumeEnforcementRunnable?.let { volumeEnforcementHandler?.removeCallbacks(it) }
+        volumeEnforcementHandler = null
+        volumeEnforcementRunnable = null
+        Log.d("AlarmService", "🔓 Volume enforcement stopped")
     }
 
     private fun startVibration() {
@@ -249,6 +285,7 @@ class AlarmService : Service() {
     
     override fun onDestroy() {
         super.onDestroy()
+        stopVolumeEnforcement() // Stop volume enforcement when alarm is dismissed
         mediaPlayer?.stop()
         mediaPlayer?.release()
         mediaPlayer = null
