@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessAlarm
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add // Added
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Delete // Added
@@ -34,6 +35,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu // Added
 import androidx.compose.material3.DropdownMenuItem // Added
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton // Added
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -153,7 +155,18 @@ fun HomeScreen(
                 }
             }
         },
-        // Removed FloatingActionButton to match reference image exactly
+        floatingActionButton = {
+            if (selectedTab == 0) {
+                FloatingActionButton(
+                    onClick = { navController.navigate("create_alarm") },
+                    containerColor = Color(0xFFFF5252), // Bright Red
+                    contentColor = Color.White,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Alarm")
+                }
+            }
+        }
     ) { padding ->
         if (selectedTab == 0) {
             LazyColumn(
