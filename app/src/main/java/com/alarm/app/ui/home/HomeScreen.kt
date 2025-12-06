@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessAlarm
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.BarChart
@@ -96,6 +98,16 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     ) 
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate("profile") }) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle, // Default profile icon
+                            contentDescription = "Profile",
+                            tint = Color.White,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF1C1C1E)
@@ -257,6 +269,7 @@ fun AlarmCard(
 
     Card(
         onClick = onClick,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp), // Rounder "cute" corners
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF2C2C2E)
         ),
@@ -264,7 +277,7 @@ fun AlarmCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 10.dp) // Reduced vertical padding
+                .padding(horizontal = 20.dp, vertical = 12.dp) // Adjusted padding for balance
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -274,21 +287,17 @@ fun AlarmCard(
                     // Days of week header
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        modifier = Modifier.padding(bottom = 6.dp)
                     ) {
                         val days = listOf("S", "M", "T", "W", "T", "F", "S")
-                        // 1 = Sunday in Java Calendar, mapping index 0->1, 1->2...
                         days.forEachIndexed { index, day ->
-                            // Simple check: default to gray if empty set, or highlight if in set.
-                            // Assuming Calendar constants: SUNDAY=1, SATURDAY=7.
-                            // Local days list index 0 is Sunday (1).
                             val dayId = index + 1
                             val isActive = alarm.daysOfWeek.contains(dayId)
                             Text(
                                 text = day,
-                                fontSize = 10.sp,
-                                color = if (isActive && alarm.isEnabled) Color.White else Color.Gray.copy(alpha = 0.5f),
-                                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
+                                fontSize = 11.sp,
+                                color = if (isActive && alarm.isEnabled) Color.White else Color.Gray.copy(alpha = 0.6f),
+                                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium
                             )
                         }
                     }
@@ -301,15 +310,15 @@ fun AlarmCard(
                         
                         Text(
                             text = "$hour:$minuteStr",
-                            fontSize = 38.sp, // Slightly larger for emphasis
+                            fontSize = 36.sp, // Balanced size
                             fontWeight = FontWeight.Normal,
                             color = if (alarm.isEnabled) Color.White else Color.Gray
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = amPm,
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(bottom = 6.dp),
+                            fontSize = 15.sp,
+                            modifier = Modifier.padding(bottom = 5.dp),
                             color = if (alarm.isEnabled) Color.White else Color.Gray
                         )
                         
@@ -317,12 +326,12 @@ fun AlarmCard(
                         if (alarm.challengeType != com.alarm.app.data.model.ChallengeType.NONE) {
                              Spacer(modifier = Modifier.width(8.dp))
                              Icon(
-                                 imageVector = Icons.Default.Extension, // Placeholder for mission icon
+                                 imageVector = Icons.Default.Extension,
                                  contentDescription = "Mission",
                                  tint = if (alarm.isEnabled) Color.White.copy(alpha = 0.7f) else Color.Gray,
                                  modifier = Modifier
-                                    .size(20.dp)
-                                    .padding(bottom = 6.dp)
+                                    .size(18.dp)
+                                    .padding(bottom = 5.dp)
                              )
                         }
                     }
@@ -335,24 +344,27 @@ fun AlarmCard(
                     onCheckedChange = { onToggle(it) },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
-                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor = Color(0xFF26C6DA), // Teal color from reference
                         uncheckedThumbColor = Color.Gray,
-                        uncheckedTrackColor = Color.DarkGray
-                    )
+                        uncheckedTrackColor = Color.DarkGray,
+                        uncheckedBorderColor = Color.Transparent
+                    ),
+                    modifier = Modifier.scale(0.8f) // Slightly smaller switch
                 )
 
                  Box {
-                    IconButton(onClick = { expanded = true }) {
+                    IconButton(onClick = { expanded = true }, modifier = Modifier.size(32.dp)) {
                         Icon(
                             Icons.Default.MoreVert, 
                             contentDescription = "Options",
-                            tint = Color.Gray
+                            tint = Color.Gray,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        containerColor = Color(0xFF2C2C2E) // Match card/bg
+                        containerColor = Color(0xFF2C2C2E)
                     ) {
                         DropdownMenuItem(
                             text = { Text("Delete", color = Color.White) },
