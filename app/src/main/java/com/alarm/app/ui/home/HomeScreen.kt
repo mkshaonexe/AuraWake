@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessAlarm
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Settings
@@ -81,25 +82,25 @@ fun HomeScreen(
                 containerColor = Color(0xFF1C1C1E),
                 contentColor = Color.White
             ) {
-                val items = listOf("Alarm", "Sleep", "Morning", "Record", "Setting")
+                val items = listOf("Alarm", "Sleep", "Morning", "Report", "Setting")
                 val icons = listOf(
                     Icons.Default.AccessAlarm,
                     Icons.Default.Bedtime,
                     Icons.Default.WbSunny,
-                    Icons.Default.BarChart,
+                    Icons.Default.Assignment, // Changed to Assignment for "Report"
                     Icons.Default.Settings
                 )
 
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(
                         icon = { Icon(icons[index], contentDescription = item) },
-                        label = { Text(item) },
+                        label = { Text(item, fontSize = 10.sp) }, // Smaller text
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Color.White,
                             selectedTextColor = Color.White,
-                            indicatorColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = Color.Transparent, // Remove the M3 pill background
                             unselectedIconColor = Color.Gray,
                             unselectedTextColor = Color.Gray
                         )
