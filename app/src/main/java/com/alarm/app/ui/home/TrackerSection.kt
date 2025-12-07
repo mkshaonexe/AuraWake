@@ -34,8 +34,8 @@ fun TrackerSection() {
 
 @Composable
 fun HeatmapGrid() {
-    // Reference image shows roughly 7 rows (Mon-Sun) and about 20-22 columns
-    val rows = 7
+    // Reference: Rows for hours 4, 5, 6, ... 12 (Total 9 rows)
+    val rows = 9
     val columns = 22
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -43,10 +43,10 @@ fun HeatmapGrid() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 28.dp, bottom = 8.dp, end = 8.dp), // Align with grid
+                .padding(start = 28.dp, bottom = 8.dp, end = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val months = listOf("Dec", "Jan", "Feb", "Mar", "Apr")
+            val months = listOf("Dec", "Jan", "Feb", "Mar", "Apr") 
             months.forEach { month ->
                 Text(
                     text = month, 
@@ -59,16 +59,21 @@ fun HeatmapGrid() {
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Day Labels Column
+            // Hour Labels Column (4 to 12)
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
-                    .height(96.dp) // Match height of grid roughly (8dp size + 4dp space) * 7
+                    .height(126.dp) // Height for 9 rows: (10dp dot + 4dp space) * 9 approx
                     .padding(end = 8.dp)
             ) {
-                Text("Mon", color = Color.Gray, fontSize = 10.sp)
-                Text("Wed", color = Color.Gray, fontSize = 10.sp)
-                Text("Fri", color = Color.Gray, fontSize = 10.sp)
+                // Showing 4, 6, 8, 10, 12 to avoid clutter, or all if they fit. 
+                // User asked for 4..12. Let's show representative ones or all if space permits small font.
+                // Given the visual density, let's list them all but maybe skipping some text if needed?
+                // Visual reference shows clear labels. Let's try 4..12
+                val hours = (4..12).map { it.toString() }
+                hours.forEach { hour ->
+                     Text(hour, color = Color.Gray, fontSize = 10.sp)
+                }
             }
 
             // Grid
@@ -80,18 +85,14 @@ fun HeatmapGrid() {
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         repeat(columns) { colIndex ->
-                            // Randomize active state to mimic the scattered look
-                            // In a real app, this would be based on actual data
                             val isActive = remember { Random.nextFloat() > 0.6 } 
-                            
-                            // Specific color from reference (Teal/Cyan) and Dark Grey
-                            val activeColor = Color(0xFF26C6DA) // Cyan/Teal
-                            val inactiveColor = Color(0xFF1C1C1E) // Dark Grey matching card backgrounds
+                            val activeColor = Color(0xFF26C6DA) 
+                            val inactiveColor = Color(0xFF1C1C1E)
 
                             Box(
                                 modifier = Modifier
-                                    .size(10.dp) // Slightly larger dots
-                                    .clip(RoundedCornerShape(3.dp)) // Soft square
+                                    .size(10.dp) 
+                                    .clip(RoundedCornerShape(3.dp)) 
                                     .background(if (isActive) activeColor else inactiveColor)
                             )
                         }
