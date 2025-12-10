@@ -61,6 +61,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip // Added
 import androidx.compose.ui.draw.scale 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import com.alarm.app.ui.theme.PrimaryRed
+import com.alarm.app.ui.theme.AccentOrange
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -188,6 +191,9 @@ fun HomeScreen(
     }
 }
 
+
+
+
 @Composable
 fun CustomBottomNavigation(
     selectedTab: Int,
@@ -196,13 +202,14 @@ fun CustomBottomNavigation(
 ) {
     Card(
         modifier = modifier
-            .height(64.dp)
-            .width(280.dp), // Pill width
+            .height(72.dp) // Slight increase for better touch area/glass feel
+            .width(300.dp), // Slightly wider
         shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1C1C1E) // Dark Grey Pill
+            containerColor = Color(0xFF1C1C1E).copy(alpha = 0.8f) // Glassy Dark tint
         ),
-        elevation = CardDefaults.cardElevation(8.dp)
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)), // Glass border
+        elevation = CardDefaults.cardElevation(0.dp) // Remove shadow for flat glass look, or keep low
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -212,20 +219,29 @@ fun CustomBottomNavigation(
             val icons = listOf(
                 Icons.Default.Home,         // Home
                 Icons.Default.PieChart,     // History
-                Icons.Default.CheckCircle,  // Settings/Tasks (Matches image checkmark)
+                Icons.Default.CheckCircle,  // Settings/Tasks 
                 Icons.Default.Person        // Profile
             )
             
-            // Labels are not shown in the image, so we skip them.
-            
             icons.forEachIndexed { index, icon ->
                 val isSelected = selectedTab == index
+                
+                // Active Indicator
+                val backgroundModifier = if (isSelected) {
+                    Modifier.background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(PrimaryRed, AccentOrange) // Liquid Gradient
+                        )
+                    )
+                } else {
+                    Modifier.background(Color.Transparent)
+                }
                 
                 Box(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(if (isSelected) Color(0xFF2E7D32) else Color.Transparent) // Green for selected
+                        .then(backgroundModifier)
                         .clickable { onTabSelected(index) },
                     contentAlignment = Alignment.Center
                 ) {
