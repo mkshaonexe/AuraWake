@@ -18,23 +18,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import com.alarm.app.R
+import androidx.compose.foundation.Image
 
 @Composable
 fun WelcomeScreen(onNext: () -> Unit) {
@@ -60,26 +47,19 @@ fun WelcomeScreen(onNext: () -> Unit) {
     ) {
         Spacer(modifier = Modifier.weight(1f))
         
-        // Animated Logo Placeholder (Red Circle with Icon)
-        Box(
+        // App Launcher Icon
+        Image(
+            painter = painterResource(id = R.mipmap.ic_launcher),
+            contentDescription = "App Icon",
             modifier = Modifier
                 .size(120.dp)
                 .scale(scale)
-                .background(Color(0xFFFF3B30), shape = CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Alarm,
-                contentDescription = "Logo",
-                tint = Color.White,
-                modifier = Modifier.size(60.dp)
-            )
-        }
+        )
         
         Spacer(modifier = Modifier.height(32.dp))
         
         Text(
-            text = "Rise & Shine",
+            text = stringResource(id = R.string.app_name),
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
