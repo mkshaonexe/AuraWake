@@ -1,5 +1,6 @@
 package com.alarm.app.ui.onboarding
 
+import android.media.RingtoneManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -13,12 +14,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,19 +27,42 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+data class RingtoneItem(val name: String, val uri: String)
 
 @Composable
 fun OnboardingSoundScreen(
     viewModel: OnboardingViewModel,
     onNext: () -> Unit
 ) {
+    val context = LocalContext.current
+    var ringtones by remember { mutableStateOf<List<RingtoneItem>>(emptyList()) }
     var selectedSound by remember { mutableStateOf(viewModel.selectedSound) }
     
-    val sounds = listOf("Orkney", "Digital Alarm Clock", "Alarm Clock", "Broken Vintage Alarm", "Fire Alarm")
-    val xmasSounds = listOf("Last Christmas", "Jingle Bell Rock")
+    // Fetch system alarm ringtones
+    LaunchedEffect(Unit) {
+        val ringtoneManager = RingtoneManager(context)
+        ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
+        val cursor = ringtoneManager.cursor
+        val ringtoneList = mutableListOf<RingtoneItem>()
+        
+        while (cursor.moveToNext()) {
+            val title = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX)
+            val uri = ringtoneManager.getRingtoneUri(cursor.position).toString()
+            ringtoneList.add(RingtoneItem(title, uri))
+        }
+        
+        ringtones = ringtoneList
+        
+        // Set default selection if none selected
+        if (selectedSound.isEmpty() && ringtoneList.isNotEmpty()) {
+            selectedSound = ringtoneList[0].name
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -56,7 +80,7 @@ fun OnboardingSoundScreen(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Grouped List in a Card-like background
+        // Ringtone List
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -70,34 +94,14 @@ fun OnboardingSoundScreen(
                     modifier = Modifier.padding(16.dp)
                 )
             }
-            items(sounds.size) { index ->
-                val sound = sounds[index]
+            items(ringtones.size) { index ->
+                val ringtone = ringtones[index]
                 SoundItem(
-                    name = sound,
-                    isSelected = selectedSound == sound,
-                    onSelect = { selectedSound = sound }
+                    name = ringtone.name,
+                    isSelected = selectedSound == ringtone.name,
+                    onSelect = { selectedSound = ringtone.name }
                 )
-                if (index < sounds.size - 1) {
-                    HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f), modifier = Modifier.padding(horizontal = 16.dp))
-                }
-            }
-            
-            item {
-                Text(
-                    "Christmas",
-                    color = Color.Gray,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-            items(xmasSounds.size) { index ->
-                val sound = xmasSounds[index]
-                SoundItem(
-                    name = sound,
-                    isSelected = selectedSound == sound,
-                    onSelect = { selectedSound = sound }
-                )
-                if (index < xmasSounds.size - 1) {
+                if (index < ringtones.size - 1) {
                     HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f), modifier = Modifier.padding(horizontal = 16.dp))
                 }
             }
