@@ -226,6 +226,11 @@ class MainActivity : ComponentActivity() {
                              )
                              com.alarm.app.ui.onboarding.OnboardingMissionScreen(
                                  viewModel = onboardingViewModel,
+                                 onNext = { navController.navigate("permission") }
+                             )
+                         }
+                         composable("permission") {
+                             com.alarm.app.ui.onboarding.OnboardingPermissionScreen(
                                  onNext = { navController.navigate("setup") }
                              )
                          }
