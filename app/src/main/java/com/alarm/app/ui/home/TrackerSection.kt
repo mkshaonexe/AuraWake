@@ -3,6 +3,8 @@ package com.alarm.app.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,7 +38,8 @@ fun TrackerSection() {
 
 @Composable
 fun HeatmapGrid() {
-    val rows = 9 // Hours 4..12
+    val rows = 24 // 24 Hours
+    val startHour = 4
     
     // Data Generation (Dec to April)
     val monthsData = listOf(
@@ -47,78 +50,90 @@ fun HeatmapGrid() {
         "Apr" to 30
     )
 
-    Row(
+    // Outer Container with FIXED height that allows Vertical Scrolling
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp) // Left padding
+            .height(160.dp) // Fixed height window
+            .verticalScroll(androidx.compose.foundation.rememberScrollState())
     ) {
-        // Fixed Y-Axis (Hours)
-        Column(
-            verticalArrangement = Arrangement.SpaceBetween,
+        Row(
             modifier = Modifier
-                .height(130.dp) // Adjusted height
-                .padding(top = 24.dp, end = 12.dp) // Top padding to align with grid below text, End padding gap
+                .fillMaxWidth()
+                .padding(start = 16.dp)
         ) {
-            (4..12).forEach { hour ->
-                Text(
-                    text = hour.toString(), 
-                    color = Color.Gray, 
-                    fontSize = 10.sp
-                )
+            // Fixed Y-Axis (Hours) - Scolls with the grid
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp), // Match grid spacing
+                modifier = Modifier
+                    .padding(top = 22.dp, end = 12.dp) // Align with grid start (approx text height offset)
+            ) {
+                repeat(rows) { i ->
+                    val hour = (startHour + i) % 24
+                    // Formatting to avoid 0 being 24? 0 is 0.
+                    // Just showing numbers.
+                    // Text needs to align with the dots. 10dp dot. Text usually ~14-16sp height.
+                    // We might need to adjust alignment.
+                    Box(modifier = Modifier.height(10.dp), contentAlignment = androidx.compose.ui.Alignment.CenterEnd) {
+                         Text(
+                            text = hour.toString(), 
+                            color = Color.Gray, 
+                            fontSize = 10.sp
+                        )
+                    }
+                }
             }
-        }
 
-        // Scrollable Grid (X-Axis)
-        androidx.compose.foundation.lazy.LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            monthsData.forEach { (monthName, days) ->
-                items(days) { dayIndex ->
-                    val day = dayIndex + 1
-                    Column(
-                        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        // Month Label (Only on 1st and maybe 15th for context, or just 1st as per image/request "dec... then next month")
-                        // Image shows label centered-ish over the month? Or start? 
-                        // Simplified: Show label on day 1 with some width or spacer.
-                        // Or better: Just text if day == 1, else invisible text to keep height?
-                        Box(modifier = Modifier.height(16.dp)) {
-                            if (day == 1) {
-                                Text(
-                                    text = monthName,
-                                    color = Color.Gray,
-                                    fontSize = 10.sp,
-                                    modifier = Modifier.width(40.dp) // Ensure it doesn't wrap weirdly, overlays next cols visually 
-                                )
-                            }
-                        }
-
-                        // The vertical dots for this day
+            // Scrollable Grid (X-Axis) - Horizontally scrollable
+            // Note: Horizontal Scroll inside Vertical Scroll implies diagonal scrolling capability or blocking.
+            // Since LazyRow handles horizontal, parent Column handles vertical.
+            androidx.compose.foundation.lazy.LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                monthsData.forEach { (monthName, days) ->
+                    items(days) { dayIndex ->
+                        val day = dayIndex + 1
                         Column(
+                            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            repeat(rows) { rowIndex ->
-                                val isActive = remember(monthName, day, rowIndex) { 
-                                    Random.nextFloat() > 0.7 
+                            // Month Label
+                            Box(modifier = Modifier.height(16.dp)) {
+                                if (day == 1) {
+                                    Text(
+                                        text = monthName,
+                                        color = Color.Gray,
+                                        fontSize = 10.sp,
+                                        modifier = Modifier.width(40.dp)
+                                    )
                                 }
-                                val activeColor = Color(0xFF26C6DA) // Teal
-                                val inactiveColor = Color(0xFF1C1C1E) // Dark Grey
+                            }
 
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .clip(RoundedCornerShape(2.dp))
-                                        .background(if (isActive) activeColor else inactiveColor)
-                                )
+                            // The vertical dots for this day (24 rows)
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                repeat(rows) { rowIndex ->
+                                    val isActive = remember(monthName, day, rowIndex) { 
+                                        Random.nextFloat() > 0.85 // Sparser data for 24h
+                                    }
+                                    val activeColor = Color(0xFF26C6DA) 
+                                    val inactiveColor = Color(0xFF1C1C1E)
+
+                                    Box(
+                                        modifier = Modifier
+                                            .size(10.dp)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(if (isActive) activeColor else inactiveColor)
+                                    )
+                                }
                             }
                         }
                     }
-                }
-                // Spacer between months? 
-                item {
-                    Spacer(modifier = Modifier.width(12.dp))
+                    item {
+                        Spacer(modifier = Modifier.width(12.dp))
+                    }
                 }
             }
         }
