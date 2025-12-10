@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Allarm App"
+rootProject.name = "AuraWake"
 include(":app")
