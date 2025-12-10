@@ -28,6 +28,8 @@ import androidx.navigation.compose.navigation
 
 @OptIn(ExperimentalPermissionsApi::class)
 class MainActivity : ComponentActivity() {
+    private var intentState by mutableStateOf<Intent?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -111,8 +113,9 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // Logic to determine initial screen
-                val ringingParams = getRingingParams(intent)
-                val isRinging = intent.getBooleanExtra("SHOW_ALARM_SCREEN", false)
+                val currentIntent = intentState ?: intent
+                val ringingParams = getRingingParams(currentIntent)
+                val isRinging = currentIntent.getBooleanExtra("SHOW_ALARM_SCREEN", false)
                 
                 // If ringing, go to ringing.
                 // If not ringing:
@@ -151,6 +154,17 @@ class MainActivity : ComponentActivity() {
                                  popUpTo("overlay_permission") { inclusive = true }
                              }
                          }
+                    }
+                }
+
+                // Handle New Intent (Deep Link / Alarm Logic)
+                LaunchedEffect(currentIntent) {
+                    if (isRinging) {
+                        android.util.Log.d("MainActivity", "🔔 LaunchedEffect - Navigating to ringing")
+                        navController.navigate("ringing") {
+                            popUpTo(0) { inclusive = true } // Clear back stack to prioritize alarm
+                            launchSingleTop = true
+                        }
                     }
                 }
 
@@ -306,11 +320,8 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent) // Update the intent 
-        // Always recreate if we need to show alarm screen to ensure fresh state
-        if (intent.getBooleanExtra("SHOW_ALARM_SCREEN", false)) {
-            android.util.Log.d("MainActivity", "🔔 onNewIntent - navigating to ringing screen")
-            recreate()
-        }
+        intentState = intent
+        android.util.Log.d("MainActivity", "🔔 onNewIntent - updated intentState")
     }
 
     private fun determineStartDestination(intent: Intent?): String {
