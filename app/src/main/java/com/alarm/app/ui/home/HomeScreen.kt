@@ -2,6 +2,7 @@ package com.alarm.app.ui.home
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -159,23 +160,8 @@ fun HomeScreen(
                         contentPadding = contentPadding
                     )
                     1 -> HistoryTabContent(contentPadding)
-                    2 -> SettingsTabContent(contentPadding) // Using Check icon/Task per image/request mix
-                    3 -> {
-                         // Workaround: ProfileScreen has its own Scaffold. 
-                         // We can wrapping it to respect our bottom padding or just let it overlay?
-                         // ProfileScreen uses Scaffold, which consumes WindowInsets.
-                         // Let's call it but we might have double Scaffolds.
-                         // For now, simpler to just display it.
-                         // We pass navController so back button works if it has one? 
-                         // Actually ProfileScreen had a Back button which pops stack. 
-                         // Since we are in a tab, popping stack might exit app.
-                         // We might need to adjust ProfileScreen or just accept it's a "view".
-                         // Ideally we refactor ProfileScreen to just be content.
-                         // But for this task, I'll invoke it.
-                         Box(modifier = Modifier.padding(bottom = 80.dp)) {
-                             com.alarm.app.ui.profile.ProfileScreen(navController = navController)
-                         }
-                    }
+                    2 -> SettingsTabContent(contentPadding) 
+                    // Case 3 (Profile) is handled via navigation now
                 }
             }
         }
@@ -183,7 +169,13 @@ fun HomeScreen(
         // Custom Floating Bottom Navigation
         CustomBottomNavigation(
             selectedTab = selectedTab,
-            onTabSelected = { selectedTab = it },
+            onTabSelected = { index ->
+                if (index == 3) {
+                    navController.navigate("profile")
+                } else {
+                    selectedTab = index
+                }
+            },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 24.dp)
@@ -325,14 +317,38 @@ fun HistoryTabContent(contentPadding: PaddingValues) {
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.Start
     ) {
-        Icon(Icons.Default.PieChart, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(64.dp))
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Sleep History", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-        Text("Coming Soon", color = Color.Gray)
+        Text(
+            "Sleep History", 
+            fontSize = 28.sp, 
+            fontWeight = FontWeight.Bold, 
+            color = Color.White
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Placeholder UI
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+                .background(Color(0xFF1C1C1E)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    Icons.Default.PieChart, 
+                    contentDescription = null, 
+                    tint = Color.Gray, 
+                    modifier = Modifier.size(64.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("No sleep data available yet", color = Color.Gray)
+            }
+        }
     }
 }
 
@@ -342,14 +358,48 @@ fun SettingsTabContent(contentPadding: PaddingValues) {
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.Start
     ) {
-        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(64.dp))
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Tasks & Settings", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-        Text("Coming Soon", color = Color.Gray)
+        Text(
+            "Tasks", 
+            fontSize = 28.sp, 
+            fontWeight = FontWeight.Bold, 
+            color = Color.White
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Placeholder UI for Tasks
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            repeat(3) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+                        .background(Color(0xFF1C1C1E)),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .border(2.dp, Color.Gray, androidx.compose.foundation.shape.CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Box(modifier = Modifier.height(14.dp).width(120.dp).background(Color.Gray.copy(alpha = 0.3f), androidx.compose.foundation.shape.RoundedCornerShape(4.dp)))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Box(modifier = Modifier.height(10.dp).width(80.dp).background(Color.Gray.copy(alpha = 0.2f), androidx.compose.foundation.shape.RoundedCornerShape(4.dp)))
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
