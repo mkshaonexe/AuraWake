@@ -66,19 +66,19 @@ fun HeatmapGrid() {
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp), // Match grid spacing
                 modifier = Modifier
-                    .padding(top = 22.dp, end = 12.dp) // Align with grid start (approx text height offset)
+                    .padding(top = 16.dp, end = 20.dp) // Top: 16dp matches Month Label height. End: More space.
             ) {
                 repeat(rows) { i ->
                     val hour = (startHour + i) % 24
-                    // Formatting to avoid 0 being 24? 0 is 0.
-                    // Just showing numbers.
-                    // Text needs to align with the dots. 10dp dot. Text usually ~14-16sp height.
-                    // We might need to adjust alignment.
-                    Box(modifier = Modifier.height(10.dp), contentAlignment = androidx.compose.ui.Alignment.CenterEnd) {
+                    Box(
+                        modifier = Modifier.height(10.dp), // Match dot height
+                        contentAlignment = androidx.compose.ui.Alignment.CenterEnd
+                    ) {
                          Text(
                             text = hour.toString(), 
-                            color = Color.Gray, 
-                            fontSize = 10.sp
+                            color = Color.White, // Improved clarity
+                            fontSize = 11.sp,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
                         )
                     }
                 }
