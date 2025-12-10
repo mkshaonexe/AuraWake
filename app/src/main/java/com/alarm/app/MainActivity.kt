@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
         // Force light status bar icons (visible on dark background)
         androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
         setContent {
-            AllarmAppTheme {
+            AllarmAppTheme(darkTheme = true) {
                 val navController = rememberNavController()
                 val context = LocalContext.current
                 val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
