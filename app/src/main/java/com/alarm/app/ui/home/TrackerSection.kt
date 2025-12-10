@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +27,7 @@ fun TrackerSection() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Black, RoundedCornerShape(16.dp)) // Pure black background for the card area if needed, or match parent
+            .background(Color.Black) 
             .padding(vertical = 12.dp)
     ) {
         HeatmapGrid()
@@ -34,69 +36,89 @@ fun TrackerSection() {
 
 @Composable
 fun HeatmapGrid() {
-    // Reference: Rows for hours 4, 5, 6, ... 12 (Total 9 rows)
-    val rows = 9
-    val columns = 22
+    val rows = 9 // Hours 4..12
+    
+    // Data Generation (Dec to April)
+    val monthsData = listOf(
+        "Dec" to 31,
+        "Jan" to 31,
+        "Feb" to 28,
+        "Mar" to 31,
+        "Apr" to 30
+    )
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Month Labels
-        Row(
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp) // Left padding
+    ) {
+        // Fixed Y-Axis (Hours)
+        Column(
+            verticalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 28.dp, bottom = 8.dp, end = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .height(130.dp) // Adjusted height
+                .padding(top = 24.dp, end = 12.dp) // Top padding to align with grid below text, End padding gap
         ) {
-            val months = listOf("Dec", "Jan", "Feb", "Mar", "Apr") 
-            months.forEach { month ->
+            (4..12).forEach { hour ->
                 Text(
-                    text = month, 
+                    text = hour.toString(), 
                     color = Color.Gray, 
                     fontSize = 10.sp
                 )
             }
         }
 
-        Row(
+        // Scrollable Grid (X-Axis)
+        androidx.compose.foundation.lazy.LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Hour Labels Column (4 to 12)
-            Column(
-                verticalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .height(126.dp) // Height for 9 rows: (10dp dot + 4dp space) * 9 approx
-                    .padding(end = 8.dp)
-            ) {
-                // Showing 4, 6, 8, 10, 12 to avoid clutter, or all if they fit. 
-                // User asked for 4..12. Let's show representative ones or all if space permits small font.
-                // Given the visual density, let's list them all but maybe skipping some text if needed?
-                // Visual reference shows clear labels. Let's try 4..12
-                val hours = (4..12).map { it.toString() }
-                hours.forEach { hour ->
-                     Text(hour, color = Color.Gray, fontSize = 10.sp)
-                }
-            }
-
-            // Grid
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                repeat(rows) { rowIndex ->
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+            monthsData.forEach { (monthName, days) ->
+                items(days) { dayIndex ->
+                    val day = dayIndex + 1
+                    Column(
+                        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        repeat(columns) { colIndex ->
-                            val isActive = remember { Random.nextFloat() > 0.6 } 
-                            val activeColor = Color(0xFF26C6DA) 
-                            val inactiveColor = Color(0xFF1C1C1E)
+                        // Month Label (Only on 1st and maybe 15th for context, or just 1st as per image/request "dec... then next month")
+                        // Image shows label centered-ish over the month? Or start? 
+                        // Simplified: Show label on day 1 with some width or spacer.
+                        // Or better: Just text if day == 1, else invisible text to keep height?
+                        Box(modifier = Modifier.height(16.dp)) {
+                            if (day == 1) {
+                                Text(
+                                    text = monthName,
+                                    color = Color.Gray,
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.width(40.dp) // Ensure it doesn't wrap weirdly, overlays next cols visually 
+                                )
+                            }
+                        }
 
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp) 
-                                    .clip(RoundedCornerShape(3.dp)) 
-                                    .background(if (isActive) activeColor else inactiveColor)
-                            )
+                        // The vertical dots for this day
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            repeat(rows) { rowIndex ->
+                                val isActive = remember(monthName, day, rowIndex) { 
+                                    Random.nextFloat() > 0.7 
+                                }
+                                val activeColor = Color(0xFF26C6DA) // Teal
+                                val inactiveColor = Color(0xFF1C1C1E) // Dark Grey
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(if (isActive) activeColor else inactiveColor)
+                                )
+                            }
                         }
                     }
+                }
+                // Spacer between months? 
+                item {
+                    Spacer(modifier = Modifier.width(12.dp))
                 }
             }
         }
