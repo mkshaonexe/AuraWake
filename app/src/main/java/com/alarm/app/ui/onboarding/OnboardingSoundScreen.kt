@@ -45,22 +45,27 @@ fun OnboardingSoundScreen(
     
     // Fetch system alarm ringtones
     LaunchedEffect(Unit) {
-        val ringtoneManager = RingtoneManager(context)
-        ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
-        val cursor = ringtoneManager.cursor
-        val ringtoneList = mutableListOf<RingtoneItem>()
-        
-        while (cursor.moveToNext()) {
-            val title = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX)
-            val uri = ringtoneManager.getRingtoneUri(cursor.position).toString()
-            ringtoneList.add(RingtoneItem(title, uri))
-        }
-        
-        ringtones = ringtoneList
-        
-        // Set default selection if none selected
-        if (selectedSound.isEmpty() && ringtoneList.isNotEmpty()) {
-            selectedSound = ringtoneList[0].name
+        try {
+            val ringtoneManager = RingtoneManager(context)
+            ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
+            val cursor = ringtoneManager.cursor
+            val ringtoneList = mutableListOf<RingtoneItem>()
+            
+            while (cursor.moveToNext()) {
+                val title = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX)
+                val uri = ringtoneManager.getRingtoneUri(cursor.position).toString()
+                ringtoneList.add(RingtoneItem(title, uri))
+            }
+            
+            ringtones = ringtoneList
+            
+            // Set default selection if none selected
+            if (selectedSound.isEmpty() && ringtoneList.isNotEmpty()) {
+                selectedSound = ringtoneList[0].name
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Fallback or empty list
         }
     }
 
