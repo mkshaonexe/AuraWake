@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.alarm.app.AlarmApplication
 import com.alarm.app.ui.alarm.AlarmViewModel
+import com.alarm.app.data.repository.SettingsRepository
 
 object AppViewModelProvider {
     val Factory = object : ViewModelProvider.Factory {

@@ -69,6 +69,25 @@ import com.alarm.app.ui.AppViewModelProvider
 import com.alarm.app.ui.alarm.AlarmViewModel
 import java.util.Calendar
 
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.alarm.app.data.model.ChallengeType
+
+// Helper to get mission icon
+private fun getChallengeIcon(type: ChallengeType): ImageVector? {
+    return when (type) {
+        ChallengeType.MATH -> Icons.Default.Calculate
+        ChallengeType.TYPING -> Icons.Default.Keyboard
+        ChallengeType.SHAKE -> Icons.Default.Smartphone
+        ChallengeType.QR -> Icons.Default.QrCode
+        ChallengeType.NONE -> null
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -315,17 +334,31 @@ fun AlarmCard(
                     
                     Text(
                         text = "$hour:$minuteStr",
-                        fontSize = 32.sp, // Reduced from 36.sp
+                        fontSize = 32.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = if (alarm.isEnabled) Color.White else Color.Gray
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = amPm,
-                        fontSize = 14.sp, // Reduced from 16.sp
+                        fontSize = 14.sp,
                         color = if (alarm.isEnabled) Color.White else Color.Gray,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
+                    
+                    // Mission Icon
+                    val icon = getChallengeIcon(alarm.challengeType)
+                    if (icon != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = if (alarm.isEnabled) Color.Gray else Color.Gray.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .size(24.dp)
+                                .padding(bottom = 4.dp)
+                        )
+                    }
                 }
 
                 // Days

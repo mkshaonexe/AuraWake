@@ -7,6 +7,8 @@ import com.alarm.app.data.alarm.AndroidAlarmScheduler
 import com.alarm.app.data.local.AlarmDatabase
 import com.alarm.app.data.repository.AlarmRepository
 import com.alarm.app.data.repository.OfflineAlarmRepository
+import com.alarm.app.data.repository.SettingsRepository
+import com.alarm.app.data.repository.SharedPreferencesSettingsRepository
 
 class AlarmApplication : Application() {
     lateinit var container: AppContainer

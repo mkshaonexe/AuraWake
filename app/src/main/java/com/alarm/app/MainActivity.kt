@@ -23,6 +23,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.runtime.DisposableEffect
+import com.alarm.app.ui.AppViewModelProvider
+import androidx.navigation.navigation
 
 @OptIn(ExperimentalPermissionsApi::class)
 class MainActivity : ComponentActivity() {
@@ -123,7 +125,7 @@ class MainActivity : ComponentActivity() {
                 // Let's stick to the logic: If we don't have overlay permission, that's the "blocking" screen.
                 // Notification permission is asked via system dialog on top of whatever screen we are on.
                 
-                val settingsRepository = (application as com.alarm.app.AlarmApplication).container.settingsRepository
+                val settingsRepository = (context.applicationContext as com.alarm.app.AlarmApplication).container.settingsRepository
                 val isFirstRun = remember { settingsRepository.isFirstRun() }
 
                 val startDestination = if (isRinging) {
