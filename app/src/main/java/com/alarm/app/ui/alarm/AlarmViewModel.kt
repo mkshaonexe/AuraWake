@@ -8,6 +8,7 @@ import com.alarm.app.data.model.ChallengeType
 import com.alarm.app.data.repository.AlarmRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -18,6 +19,12 @@ class AlarmViewModel(
 ) : ViewModel() {
 
     val allAlarms: StateFlow<List<Alarm>> = repository.getAllAlarms()
+        .map { alarms ->
+            alarms.sortedWith(
+                compareByDescending<Alarm> { it.isEnabled }
+                    .thenBy { it.hour * 60 + it.minute }
+            )
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
