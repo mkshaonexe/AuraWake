@@ -1,6 +1,7 @@
 package com.alarm.app.ui.onboarding
 
 import android.media.RingtoneManager
+import android.media.MediaPlayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +44,43 @@ fun OnboardingSoundScreen(
     val context = LocalContext.current
     var ringtones by remember { mutableStateOf<List<RingtoneItem>>(emptyList()) }
     var selectedSound by remember { mutableStateOf(viewModel.selectedSound) }
+    
+    // MediaPlayer for preview
+    val mediaPlayer = remember { MediaPlayer() }
+    
+    // Cleanup MediaPlayer when screen is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            try {
+                if (mediaPlayer.isPlaying) {
+                    mediaPlayer.stop()
+                }
+                mediaPlayer.release()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun playPreview(uriString: String) {
+        try {
+            if (mediaPlayer.isPlaying) {
+                mediaPlayer.stop()
+            }
+            mediaPlayer.reset()
+            mediaPlayer.setDataSource(context, android.net.Uri.parse(uriString))
+            mediaPlayer.setAudioAttributes(
+                android.media.AudioAttributes.Builder()
+                    .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            mediaPlayer.prepare()
+            mediaPlayer.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
     
     // Fetch system alarm ringtones
     LaunchedEffect(Unit) {
@@ -104,7 +143,10 @@ fun OnboardingSoundScreen(
                 SoundItem(
                     name = ringtone.name,
                     isSelected = selectedSound == ringtone.name,
-                    onSelect = { selectedSound = ringtone.name }
+                    onSelect = { 
+                        selectedSound = ringtone.name
+                        playPreview(ringtone.uri)
+                    }
                 )
                 if (index < ringtones.size - 1) {
                     HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f), modifier = Modifier.padding(horizontal = 16.dp))
@@ -116,6 +158,10 @@ fun OnboardingSoundScreen(
         
         Button(
             onClick = {
+                // Stop playing when proceeding
+                if (mediaPlayer.isPlaying) {
+                    mediaPlayer.stop()
+                }
                 viewModel.updateSound(selectedSound)
                 onNext()
             },
