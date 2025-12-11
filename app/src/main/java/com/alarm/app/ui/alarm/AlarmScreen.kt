@@ -71,6 +71,16 @@ import com.alarm.app.data.model.ChallengeType
 import com.alarm.app.ui.AppViewModelProvider
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import android.media.AudioAttributes
+import android.media.SoundPool
+import androidx.compose.runtime.DisposableEffect
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import androidx.compose.ui.platform.LocalContext
+import android.view.HapticFeedbackConstants
+import android.view.SoundEffectConstants
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -377,7 +387,6 @@ fun ChallengeOption(type: ChallengeType, isSelected: Boolean, onClick: () -> Uni
          Text(label, color = Color.White, fontSize = 12.sp)
     }
 }
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WheelPicker(
@@ -388,9 +397,64 @@ fun WheelPicker(
     modifier: Modifier = Modifier
 ) {
     val pagerState = rememberPagerState(initialPage = initialItem) { count }
+    val context = LocalContext.current
+    var lastPage by remember { mutableStateOf(initialItem) }
+    var soundLoaded by remember { mutableStateOf(false) }
+
+    // Initialize SoundPool
+    val soundPool = remember {
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        SoundPool.Builder()
+            .setMaxStreams(3)
+            .setAudioAttributes(audioAttributes)
+            .build().apply {
+                setOnLoadCompleteListener { _, _, status ->
+                    if (status == 0) soundLoaded = true
+                }
+            }
+    }
     
-    LaunchedEffect(pagerState.currentPage) {
-        onItemSelected(pagerState.currentPage)
+    val soundId = remember(soundPool) {
+        soundPool.load(context, com.alarm.app.R.raw.tick, 1)
+    }
+
+    // Release SoundPool on dispose
+    DisposableEffect(soundPool) {
+        onDispose {
+            soundPool.release()
+        }
+    }
+    
+    // Use snapshotFlow to reliably detect page changes
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }
+            .collect { page ->
+                onItemSelected(page)
+                if (page != lastPage) {
+                    lastPage = page
+                    
+                    // Haptic Feedback
+                    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                    if (vibrator?.hasVibrator() == true) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            vibrator.vibrate(VibrationEffect.createOneShot(25, VibrationEffect.DEFAULT_AMPLITUDE))
+                        } else {
+                            @Suppress("DEPRECATION")
+                            vibrator.vibrate(25)
+                        }
+                    }
+                    
+                    // Sound Effect
+                    if (soundLoaded) {
+                        soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f)
+                    }
+                }
+            }
     }
 
     // visibleItemsCount = 3 means 1 selected, 1 above, 1 below roughly
