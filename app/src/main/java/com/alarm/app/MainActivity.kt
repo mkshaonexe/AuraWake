@@ -137,27 +137,11 @@ class MainActivity : ComponentActivity() {
                     "ringing"
                 } else if (isFirstRun) {
                     "onboarding"
-                } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M && 
-                           !android.provider.Settings.canDrawOverlays(context)) { 
-                           // Use raw check for initial state to avoid race condition with state var
-                    "overlay_permission" 
                 } else {
                     "home"
                 }
 
-                // Auto-navigation from Overlay to Home if permission granted
-                LaunchedEffect(hasOverlayPermission) {
-                    if (hasOverlayPermission) {
-                         // Check if we are currently on overlay_permission screen to avoid random jumps
-                         // But for simplicity, if we have permission, we shouldn't be on that screen.
-                         val currentRoute = navController.currentDestination?.route
-                         if (currentRoute == "overlay_permission") {
-                             navController.navigate("home") {
-                                 popUpTo("overlay_permission") { inclusive = true }
-                             }
-                         }
-                    }
-                }
+                // Auto-navigation logic removed as we handle permissions on Home Screen now
 
                 // Handle New Intent (Deep Link / Alarm Logic)
                 LaunchedEffect(currentIntent) {

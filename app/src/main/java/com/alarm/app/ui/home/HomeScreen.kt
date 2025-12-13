@@ -1,6 +1,7 @@
 package com.alarm.app.ui.home
 
 import android.widget.Toast
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -75,6 +76,10 @@ import com.alarm.app.data.model.Alarm
 import com.alarm.app.ui.AppViewModelProvider
 import com.alarm.app.ui.alarm.AlarmViewModel
 import java.util.Calendar
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.runtime.DisposableEffect
+
 
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Keyboard
@@ -258,11 +263,126 @@ fun HomeTabContent(
     contentPadding: PaddingValues
 ) {
     val context = LocalContext.current
+    var ignoredPermissions by remember { mutableStateOf(setOf<String>()) }
+    
+    // Permission States
+    var hasOverlayPermission by remember { mutableStateOf(true) }
+    var hasNotificationPermission by remember { mutableStateOf(true) }
+    var hasExactAlarmPermission by remember { mutableStateOf(true) }
+
+    // Check Permissions Function
+    fun checkPermissions() {
+         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            hasOverlayPermission = android.provider.Settings.canDrawOverlays(context)
+        }
+        
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val notificationCheck = androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            )
+            hasNotificationPermission = notificationCheck == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+             val alarmManager = context.getSystemService(android.app.AlarmManager::class.java)
+             hasExactAlarmPermission = alarmManager?.canScheduleExactAlarms() == true
+        }
+    }
+
+    // Lifecycle observer to re-check permissions
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                checkPermissions()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        // Initial check
+        checkPermissions()
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
+    // Permission Request Launchers
+    val notificationPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted -> hasNotificationPermission = isGranted }
+    )
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        
+        // --- PERMISSION WARNINGS ---
+        
+        // 1. Overlay Permission (Critical)
+        if (!hasOverlayPermission && !ignoredPermissions.contains("overlay")) {
+            item {
+                PermissionWarningCard(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    title = "Display Over Other Apps",
+                    description = "Required to show the alarm screen when measuring sleep or using other apps.",
+                    buttonText = "Grant Permission",
+                    onClick = {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                            val intent = android.content.Intent(
+                                android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                android.net.Uri.parse("package:${context.packageName}")
+                            )
+                            context.startActivity(intent)
+                        }
+                    },
+                    onIgnore = { ignoredPermissions = ignoredPermissions + "overlay" }
+                )
+            }
+        }
+
+        // 2. Notification Permission
+         if (!hasNotificationPermission && !ignoredPermissions.contains("notification")) {
+            item {
+                PermissionWarningCard(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    title = "Enable Notifications",
+                    description = "Required to ensure you never miss an alarm notification.",
+                    buttonText = "Allow Notifications",
+                    onClick = {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                           notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    },
+                    onIgnore = { ignoredPermissions = ignoredPermissions + "notification" }
+                )
+            }
+        }
+        
+        // 3. Exact Alarm Permission (Android 12+)
+        if (!hasExactAlarmPermission && !ignoredPermissions.contains("exact_alarm")) {
+             item {
+                PermissionWarningCard(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    title = "Exact Alarms",
+                    description = "Required to ring alarms at the precise time you set.",
+                    buttonText = "Grant in Settings",
+                    onClick = {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                             val intent = android.content.Intent(
+                                android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                android.net.Uri.parse("package:${context.packageName}")
+                            )
+                            context.startActivity(intent)
+                        }
+                    },
+                    onIgnore = { ignoredPermissions = ignoredPermissions + "exact_alarm" }
+                )
+            }
+        }
+
+
         // 1. Header "Ring in..."
         item {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -292,14 +412,14 @@ fun HomeTabContent(
 
         // 3. Alarm List
         items(alarms, key = { it.id }) { alarm ->
-            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 AlarmCard(
                     alarm = alarm,
                     onToggle = { viewModel.toggleAlarm(alarm) },
                     onDelete = { viewModel.deleteAlarm(alarm) },
                     onDuplicate = { viewModel.duplicateAlarm(alarm) },
                     onPreview = { 
-                        navController.navigate("ringing")
+                        navController.navigate("ringing?startImmediate=true&isPreview=true")
                     },
                     onSkip = {
                         Toast.makeText(context, "Alarm skipped once", Toast.LENGTH_SHORT).show()
@@ -310,6 +430,7 @@ fun HomeTabContent(
         }
     }
 }
+
 
 @Composable
 fun HistoryTabContent(contentPadding: PaddingValues) {
@@ -589,6 +710,80 @@ fun AlarmCard(
                             leadingIcon = { Icon(Icons.Default.Extension, contentDescription = null, tint = Color.White) }
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PermissionWarningCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    description: String,
+    buttonText: String,
+    onClick: () -> Unit,
+    onIgnore: () -> Unit
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF2C2C2E)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 8.dp)
+            ) {
+                 Icon(
+                    Icons.Default.Settings,
+                    contentDescription = null,
+                    tint = Color(0xFFFFA726), // Orange warning
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
+            
+            Text(
+                text = description,
+                color = Color.LightGray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                 androidx.compose.material3.Button(
+                    onClick = onClick,
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = com.alarm.app.ui.theme.PrimaryRed
+                    ),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(buttonText, color = Color.White)
+                }
+                
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onIgnore,
+                    modifier = Modifier.weight(1f),
+                     colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color.Gray
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
+                ) {
+                    Text("Ignore")
                 }
             }
         }
