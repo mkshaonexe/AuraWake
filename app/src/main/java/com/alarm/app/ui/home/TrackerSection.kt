@@ -1,27 +1,17 @@
 package com.alarm.app.ui.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.alarm.app.ui.theme.AccentOrange
-import com.alarm.app.ui.theme.PrimaryRed
 import java.util.*
 import kotlin.random.Random
 
@@ -32,100 +22,25 @@ private val MONTH_LABEL_HEIGHT = 16.dp
 
 @Composable
 fun TrackerSection() {
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp)),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1C1C1E)
-        )
+            .background(Color.Black)
+            .padding(vertical = 16.dp, horizontal = 16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .padding(20.dp)
-        ) {
-            // Header with Stats
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.LocalFireDepartment,
-                        contentDescription = null,
-                        tint = AccentOrange,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Consistency",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                // Mini Stats
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                   StatBadge("Active", "148")
-                   Spacer(modifier = Modifier.width(8.dp))
-                   StatBadge("Streak", "12")
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(20.dp))
-
-            ContributionHeatmap()
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Legend
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-               Text("Less", color = Color.Gray, fontSize = 10.sp, modifier = Modifier.padding(end = 4.dp))
-               Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                   HeatmapSquare(0)
-                   HeatmapSquare(1)
-                   HeatmapSquare(2)
-                   HeatmapSquare(3)
-                   HeatmapSquare(4)
-               }
-               Text("More", color = Color.Gray, fontSize = 10.sp, modifier = Modifier.padding(start = 4.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun StatBadge(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.End) {
-        Text(
-            value,
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            label,
-            color = Color.Gray,
-            fontSize = 10.sp
-        )
+        ContributionHeatmap()
     }
 }
 
 @Composable
 fun ContributionHeatmap() {
-    // 1. Generate Dummy Data (Last 20 Weeks to fit cleanly)
-    val weeksData = remember { generateHeatmapData(20) }
+    // 1. Generate Dummy Data (Last 26 Weeks -> approx 6 months)
+    val weeksData = remember { generateHeatmapData(26) }
     
     // 2. Layout
     Row(modifier = Modifier.fillMaxWidth()) {
         // Left Column: Day Labels (Mon, Wed, Fri)
+        // We add top padding to align with the Grid (skipping Month Label height)
         Column(modifier = Modifier.padding(top = MONTH_LABEL_HEIGHT + GRID_SPACING)) {
             DayLabels()
         }
@@ -147,10 +62,11 @@ fun DayLabels() {
         verticalArrangement = Arrangement.spacedBy(GRID_SPACING)
     ) {
         // 7 Rows (Sun, Mon, Tue, Wed, Thu, Fri, Sat)
+        // Labels on indices: 1 (Mon), 3 (Wed), 5 (Fri)
         repeat(7) { index ->
             Box(
                 modifier = Modifier.height(SQUARE_SIZE),
-                contentAlignment = Alignment.CenterEnd 
+                contentAlignment = Alignment.CenterEnd // Align text to the right, next to the grid
             ) {
                 if (index == 1 || index == 3 || index == 5) {
                     val label = when(index) {
@@ -161,12 +77,12 @@ fun DayLabels() {
                     }
                     Text(
                         text = label, 
-                        color = Color.Gray,
-                        fontSize = 9.sp, 
-                        lineHeight = 10.sp,
+                        color = Color(0xFFC9D1D9), // Brighter GitHub-like text color
+                        fontSize = 9.sp, // Slightly smaller to fit 10dp height
+                        lineHeight = 10.sp, // Ensure line height matches box
                         softWrap = false,
                         modifier = Modifier
-                            .requiredHeight(12.dp)
+                            .requiredHeight(12.dp) // Force height to allow visual overflow if needed
                             .wrapContentWidth()
                     )
                 }
@@ -186,12 +102,13 @@ fun MonthLabels(weeks: List<WeekData>) {
                 modifier = Modifier.width(SQUARE_SIZE)
             ) {
                 if (week.isNewMonth || (weeks.indexOf(week) == 0 && week.monthName.isNotEmpty())) {
+                    // Allow text to overflow the 10dp box
                     Text(
                         text = week.monthName,
-                        color = Color.Gray,
+                        color = Color(0xFFC9D1D9), // Brighter GitHub-like text color
                         fontSize = 10.sp,
                         softWrap = false,
-                        modifier = Modifier.requiredWidth(40.dp)
+                        modifier = Modifier.requiredWidth(40.dp) // Ensure it draws fully
                     )
                 }
             }
@@ -201,6 +118,7 @@ fun MonthLabels(weeks: List<WeekData>) {
 
 @Composable
 fun HeatmapGrid(weeks: List<WeekData>) {
+    // Use Row instead of LazyRow to ensure strict alignment with MonthLabels in this fixed window
     Row(
         horizontalArrangement = Arrangement.spacedBy(GRID_SPACING),
         modifier = Modifier.fillMaxWidth()
@@ -220,12 +138,12 @@ fun HeatmapGrid(weeks: List<WeekData>) {
 @Composable
 fun HeatmapSquare(level: Int) { // level 0..4 (0=Empty, 4=Max)
     val color = when (level) {
-        0 -> Color(0xFF2C2C2E) // Dark gray placeholder
-        1 -> Color(0xFF442B2D) // Very dark red
-        2 -> Color(0xFF8B3A3A) // Dark Red
-        3 -> PrimaryRed       // Main Red
-        4 -> AccentOrange     // Bright Orange (Max)
-        else -> Color(0xFF2C2C2E)
+        0 -> Color(0xFF161B22) // GitHub dark empty
+        1 -> Color(0xFF0E4429)
+        2 -> Color(0xFF006D32)
+        3 -> Color(0xFF26A641)
+        4 -> Color(0xFF39D353) // Max bright green
+        else -> Color(0xFF161B22)
     }
 
     Box(
@@ -258,12 +176,14 @@ fun generateHeatmapData(numWeeks: Int): List<WeekData> {
         repeat(7) {
             // Random activity
             val r = Random.nextFloat()
-            val level = if (r > 0.6) Random.nextInt(1, 5) else 0
+            val level = if (r > 0.7) Random.nextInt(1, 5) else 0
             days.add(level)
         }
         
         val currentMonth = cal.get(Calendar.MONTH)
         val monthName = if (currentMonth != lastMonth) getMonthName(currentMonth) else ""
+        // Only show label if it's the first week of the month AND not the very first column (looks cleaner usually)
+        // OR just whenever month changes
         val isNewMonth = currentMonth != lastMonth
         
         weeks.add(WeekData(monthName, isNewMonth, days))
