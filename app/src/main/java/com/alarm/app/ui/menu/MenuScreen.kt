@@ -124,6 +124,21 @@ fun MenuScreen(navController: NavController) {
                         } catch (e: Exception) {}
                     }
                 )
+                SettingsItem(
+                    icon = Icons.Default.Email,
+                    title = "Contact Us",
+                    subtitle = "Report bugs or suggest features",
+                    onClick = {
+                        // Email intent
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:support@aurawake.com")
+                            putExtra(Intent.EXTRA_SUBJECT, "AuraWake Feedback")
+                        }
+                        try {
+                           context.startActivity(intent) 
+                        } catch (e: Exception) {}
+                    }
+                )
             }
 
             // ABOUT
