@@ -119,67 +119,40 @@ fun ProfileCard(
 @Composable
 fun ContributionGraphCard() {
     ProfileCard {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Month Headers (Simplified)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 30.dp, bottom = 8.dp), // Offset for day labels
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                listOf("Dec", "Jan", "Feb", "Mar", "Apr").forEach { 
-                    Text(it, color = TextSecondary, fontSize = 12.sp) 
-                }
-            }
+        // Use the shared component from Home
+        com.alarm.app.ui.home.ContributionHeatmap()
+    }
+}
 
-            Row(modifier = Modifier.fillMaxWidth()) {
-                // Day Labels
-                Column(
-                    verticalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.height(100.dp).padding(end = 8.dp)
-                ) {
-                    listOf("Mon", "Wed", "Fri").forEach {
-                        Text(it, color = TextSecondary, fontSize = 12.sp)
+@Composable
+fun SkillPointsCard() {
+    ProfileCard(modifier = Modifier.height(220.dp)) {
+        Text("Skill Points", color = TextWhite, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        val skills = listOf(
+            "Writing" to 0.7f,
+            "Financial" to 0.4f,
+            "Learning" to 0.9f
+        )
+        
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            skills.forEach { (name, progress) ->
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(), 
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(name, color = TextSecondary, fontSize = 12.sp)
                     }
-                }
-
-                // The Grid
-                // 16 weeks roughly fits
-                val weeks = 16
-                val daysPerWeek = 7
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    repeat(weeks) { weekIndex ->
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            repeat(daysPerWeek) { dayIndex ->
-                                // Mock random data for visual effect
-                                val activityLevel = remember(weekIndex, dayIndex) { 
-                                    if (kotlin.random.Random.nextFloat() > 0.6) {
-                                       kotlin.random.Random.nextInt(1, 4) 
-                                    } else 0
-                                }
-                                
-                                val color = when (activityLevel) {
-                                    1 -> PrimaryPurple.copy(alpha = 0.4f)
-                                    2 -> PrimaryPurple.copy(alpha = 0.7f)
-                                    3 -> PrimaryPurple
-                                    else -> Color(0xFF2A2A35) // Empty/Inactive
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .clip(RoundedCornerShape(2.dp))
-                                        .background(color)
-                                )
-                            }
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxWidth().height(6.dp),
+                        color = PrimaryPurple,
+                        trackColor = Color(0xFF2A2A35),
+                        strokeCap = StrokeCap.Round,
+                    )
                 }
             }
         }
@@ -305,41 +278,7 @@ fun createPolygonPath(center: Offset, radius: Float, sides: Int): Path {
     return path
 }
 
-@Composable
-fun SkillPointsCard() {
-    ProfileCard(modifier = Modifier.height(220.dp)) {
-        Text("Skill Points", color = TextWhite, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        val skills = listOf(
-            "Writing" to 0.7f,
-            "Financial" to 0.4f,
-            "Learning" to 0.9f,
-            "Value Earning" to 0.6f
-        )
-        
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            skills.forEach { (name, progress) ->
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(), 
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(name, color = TextSecondary, fontSize = 12.sp)
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    LinearProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier.fillMaxWidth().height(6.dp),
-                        color = PrimaryPurple,
-                        trackColor = Color(0xFF2A2A35),
-                        strokeCap = StrokeCap.Round,
-                    )
-                }
-            }
-        }
-    }
-}
+
 
 @Composable
 fun ActivityBarChartCard() {
