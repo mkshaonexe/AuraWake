@@ -113,10 +113,9 @@ fun MenuScreen(navController: NavController) {
                     title = "Contact Us",
                     subtitle = "Report bugs or suggest features",
                     onClick = {
-                        // Email intent
-                        val intent = Intent(Intent.ACTION_SENDTO).apply {
-                            data = Uri.parse("mailto:support@aurawake.com")
-                            putExtra(Intent.EXTRA_SUBJECT, "AuraWake Feedback")
+                        // Open website
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            data = Uri.parse("https://mkshaon.com/aurawake")
                         }
                         try {
                            context.startActivity(intent) 

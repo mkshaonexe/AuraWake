@@ -44,6 +44,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -58,6 +60,7 @@ fun OnboardingSoundScreen(
     val context = LocalContext.current
     var ringtones by remember { mutableStateOf<List<RingtoneItem>>(emptyList()) }
     var selectedSound by remember { mutableStateOf(viewModel.selectedSound) }
+    var isMuted by remember { mutableStateOf(false) } // Add this line
     
     // MediaPlayer for preview
     val mediaPlayer = remember { MediaPlayer() }
@@ -90,6 +93,11 @@ fun OnboardingSoundScreen(
                     .build()
             )
             mediaPlayer.prepare()
+            if (isMuted) {
+                mediaPlayer.setVolume(0f, 0f)
+            } else {
+                mediaPlayer.setVolume(1.0f, 1.0f)
+            }
             mediaPlayer.start()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -154,12 +162,36 @@ fun OnboardingSoundScreen(
 
         // Carousel of Suggestions
         if (ringtones.isNotEmpty()) {
-            Text(
-                "Favorites",
-                color = Color.Gray,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Favorites",
+                    color = Color.Gray,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                // Mute Button
+                Icon(
+                    imageVector = if (isMuted) Icons.Filled.VolumeOff else Icons.Filled.VolumeUp,
+                    contentDescription = if (isMuted) "Unmute" else "Mute",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .clickable {
+                            isMuted = !isMuted
+                            if (isMuted) {
+                                mediaPlayer.setVolume(0f, 0f)
+                            } else {
+                                mediaPlayer.setVolume(1.0f, 1.0f)
+                            }
+                        }
+                        .padding(8.dp)
+                )
+            }
+            
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
