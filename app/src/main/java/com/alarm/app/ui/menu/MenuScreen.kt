@@ -78,16 +78,30 @@ fun MenuScreen(navController: NavController) {
             // Expandable Status Card with Permissions
             ExpandableStatusCard(context)
 
-            // GENERAL
-            SettingsSection(title = "GENERAL") {
+            // CUSTOMIZATION
+            SettingsSection(title = "CUSTOMIZATION") {
                  SettingsItem(
-                    icon = Icons.Default.Notifications,
-                    title = "Notification Settings",
-                    subtitle = "Manage app notifications",
+                    icon = Icons.Default.Flag,
+                    title = "Customize Mission",
+                    subtitle = "Set default challenge settings",
                     onClick = {
-                        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                        }
+                        // Navigate to mission settings
+                    }
+                )
+                SettingsItem(
+                    icon = Icons.Default.Layers,
+                    title = "Customize Overlay",
+                    subtitle = "Adjust alarm screen appearance",
+                    onClick = {
+                        // Navigate to overlay settings
+                    }
+                )
+                  SettingsItem(
+                    icon = Icons.Default.MusicNote,
+                    title = "Customize Ringtone",
+                    subtitle = "Set default alarm sound",
+                    onClick = {
+                        val intent = Intent(Settings.ACTION_SOUND_SETTINGS)
                         context.startActivity(intent)
                     }
                 )
