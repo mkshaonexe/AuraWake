@@ -257,7 +257,8 @@ fun OnboardingSoundScreen(
                 if (mediaPlayer.isPlaying) {
                     mediaPlayer.stop()
                 }
-                viewModel.updateSound(selectedSound)
+                val selectedUri = ringtones.find { it.name == selectedSound }?.uri
+                viewModel.updateSound(selectedSound, selectedUri)
                 onNext()
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3B30)),

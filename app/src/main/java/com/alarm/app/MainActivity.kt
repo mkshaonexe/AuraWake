@@ -168,6 +168,9 @@ class MainActivity : ComponentActivity() {
                     composable("contribution") {
                         com.alarm.app.ui.menu.ContributionScreen(navController = navController)
                     }
+                    composable("customize_ringtone") {
+                        com.alarm.app.ui.menu.CustomizeRingtoneScreen(navController = navController)
+                    }
                     composable("mission_customization") { 
                         com.alarm.app.ui.mission.MissionCustomizationListScreen(navController = navController)
                     }

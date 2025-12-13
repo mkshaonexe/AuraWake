@@ -101,8 +101,7 @@ fun MenuScreen(navController: NavController) {
                     title = "Customize Ringtone",
                     subtitle = "Set default alarm sound",
                     onClick = {
-                        val intent = Intent(Settings.ACTION_SOUND_SETTINGS)
-                        context.startActivity(intent)
+                        navController.navigate("customize_ringtone")
                     }
                 )
             }

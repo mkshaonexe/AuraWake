@@ -19,6 +19,10 @@ interface SettingsRepository {
 
     fun getOverlayImageUri(): String?
     fun saveOverlayImageUri(uri: String?)
+
+    // Ringtone
+    fun getDefaultRingtoneUri(): String?
+    fun saveDefaultRingtoneUri(uri: String?)
 }
 
 class SharedPreferencesSettingsRepository(private val context: Context) : SettingsRepository {
@@ -99,6 +103,16 @@ class SharedPreferencesSettingsRepository(private val context: Context) : Settin
     override fun saveOverlayImageUri(uri: String?) {
         prefs.edit {
             putString("overlay_image_uri", uri)
+        }
+    }
+
+    override fun getDefaultRingtoneUri(): String? {
+        return prefs.getString("default_ringtone_uri", null)
+    }
+
+    override fun saveDefaultRingtoneUri(uri: String?) {
+        prefs.edit {
+            putString("default_ringtone_uri", uri)
         }
     }
 }

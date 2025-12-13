@@ -25,9 +25,9 @@ class OnboardingViewModel(
     var selectedHour by mutableIntStateOf(7)
     var selectedMinute by mutableIntStateOf(0)
     
-    // Default Sound - "Orkney" as per image, but we just need a string or resource.
-    // We'll store the name.
-    var selectedSound by mutableStateOf("Orkney")
+    // Default Sound
+    var selectedSound by mutableStateOf("Default")
+    var selectedSoundUri by mutableStateOf<String?>(null)
     
     // Default Mission
     var selectedChallenge by mutableStateOf(ChallengeType.NONE)
@@ -37,8 +37,9 @@ class OnboardingViewModel(
         selectedMinute = minute
     }
 
-    fun updateSound(soundName: String) {
+    fun updateSound(soundName: String, soundUri: String?) {
         selectedSound = soundName
+        selectedSoundUri = soundUri
     }
 
     fun updateChallenge(challenge: ChallengeType) {
@@ -47,27 +48,19 @@ class OnboardingViewModel(
 
     fun completeOnboarding(onSuccess: () -> Unit) {
         viewModelScope.launch {
+            // Save the selected ringtone as default
+             if (selectedSoundUri != null) {
+                settingsRepository.saveDefaultRingtoneUri(selectedSoundUri)
+            }
+            
             // Create the alarm
             val alarm = Alarm(
                 hour = selectedHour,
                 minute = selectedMinute,
                 isEnabled = true,
-                daysOfWeek = emptySet(), // One-time alarm for now? Or Daily? Image didn't specify, but usually onboarding sets a daily or one-off. Let's make it daily for "Everyday" or just enabled. 
-                // Let's assume enabled repeating for all days or just enabled one shot. 
-                // Let's make it Simple Enabled (one shot if days empty, but we can default to Mon-Fri or All days if user wants 'Wake up').
-                // Let's stick to emptySet (one-off) for start, or all days.
-                // Actually, let's make it ALL DAYS (Daily) to be useful.
-                // daysOfWeek = (1..7).toSet(), 
-                // For now, let's stick to default empty (one-time) to avoid being too aggressive, or user can edit later.
+                daysOfWeek = emptySet(), 
                 challengeType = selectedChallenge,
-                label = "Wake Up" // Default label
-                // sound logic needs to be handled in Alarm object if we support it. 
-                // Looking at Alarm.kt, there is no sound field. It might be using system default or not implemented yet in model.
-                // Accessing Alarm.kt from file view earlier... 
-                //     val label: String? = null,
-                //     val challengeType: ChallengeType = ChallengeType.NONE,
-                //     val challengeConfig: String? = null 
-                // No sound field in Alarm entity. I will skip saving sound for now and just save the alarm.
+                label = "Wake Up" 
             )
             
             alarmRepository.insertAlarm(alarm)

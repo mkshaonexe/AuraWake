@@ -205,7 +205,10 @@ class AlarmService : Service() {
             // Start volume enforcement - prevents user from lowering volume
             startVolumeEnforcement(audioManager)
             
-            val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            val settingsRepository = (applicationContext as com.alarm.app.AlarmApplication).container.settingsRepository
+            val customRingtone = settingsRepository.getDefaultRingtoneUri()?.let { android.net.Uri.parse(it) }
+
+            val alarmUri = customRingtone ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             
             mediaPlayer = MediaPlayer().apply {
