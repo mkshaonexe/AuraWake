@@ -726,10 +726,12 @@ fun PermissionWarningCard(
     onIgnore: () -> Unit
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, Color(0xFFFFA726).copy(alpha = 0.3f), androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF2C2C2E)
+            containerColor = Color(0xFF1C1C1E) // Darker background to match app theme
         )
     ) {
         Column(
@@ -737,28 +739,38 @@ fun PermissionWarningCard(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 12.dp)
             ) {
-                 Icon(
-                    Icons.Default.Settings,
-                    contentDescription = null,
-                    tint = Color(0xFFFFA726), // Orange warning
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+                 Box(
+                     modifier = Modifier
+                         .size(40.dp)
+                         .clip(androidx.compose.foundation.shape.CircleShape)
+                         .background(Color(0xFFFFA726).copy(alpha = 0.1f)),
+                     contentAlignment = Alignment.Center
+                 ) {
+                     Icon(
+                        Icons.Default.Settings,
+                        contentDescription = null,
+                        tint = Color(0xFFFFA726), // Orange warning
+                        modifier = Modifier.size(24.dp)
+                    )
+                 }
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = title,
                     color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    modifier = Modifier.weight(1f)
                 )
             }
             
             Text(
                 text = description,
-                color = Color.LightGray,
+                color = Color.Gray,
                 fontSize = 14.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
+                lineHeight = 20.sp,
+                modifier = Modifier.padding(bottom = 20.dp)
             )
             
             Row(
@@ -770,18 +782,24 @@ fun PermissionWarningCard(
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                         containerColor = com.alarm.app.ui.theme.PrimaryRed
                     ),
-                    modifier = Modifier.weight(1f)
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
                 ) {
-                    Text(buttonText, color = Color.White)
+                    Text(buttonText, color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
                 
                 androidx.compose.material3.OutlinedButton(
                     onClick = onIgnore,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
                      colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
                         contentColor = Color.Gray
                     ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f))
                 ) {
                     Text("Ignore")
                 }
