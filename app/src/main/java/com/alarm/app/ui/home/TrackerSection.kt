@@ -66,7 +66,7 @@ fun DayLabels() {
         repeat(7) { index ->
             Box(
                 modifier = Modifier.height(SQUARE_SIZE),
-                contentAlignment = Alignment.CenterEnd
+                contentAlignment = Alignment.CenterEnd // Align text to the right, next to the grid
             ) {
                 if (index == 1 || index == 3 || index == 5) {
                     val label = when(index) {
@@ -77,9 +77,13 @@ fun DayLabels() {
                     }
                     Text(
                         text = label, 
-                        color = Color.Gray, 
-                        fontSize = 10.sp,
-                        modifier = Modifier.padding(end = 4.dp) // Gap between Label And Grid
+                        color = Color(0xFFC9D1D9), // Brighter GitHub-like text color
+                        fontSize = 9.sp, // Slightly smaller to fit 10dp height
+                        lineHeight = 10.sp, // Ensure line height matches box
+                        softWrap = false,
+                        modifier = Modifier
+                            .requiredHeight(12.dp) // Force height to allow visual overflow if needed
+                            .wrapContentWidth()
                     )
                 }
             }
