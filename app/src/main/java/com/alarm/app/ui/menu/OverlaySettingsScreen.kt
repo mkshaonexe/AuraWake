@@ -135,7 +135,14 @@ fun OverlaySettingsScreen(navController: NavController) {
                      Spacer(modifier = Modifier.weight(0.2f))
                      
                      // Time
-                     Text("10:44", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.Bold)
+                     // Time (Real-time)
+                     val currentTime = java.util.Calendar.getInstance()
+                     Text(
+                        text = String.format("%02d:%02d", currentTime.get(java.util.Calendar.HOUR_OF_DAY), currentTime.get(java.util.Calendar.MINUTE)),
+                        color = Color.White, 
+                        fontSize = 48.sp, 
+                        fontWeight = FontWeight.Bold
+                     )
                      
                      // The Overlay Image (Moon or Custom)
                      // If custom image is set, we don't show the circle anymore, or we show just the moon if no image

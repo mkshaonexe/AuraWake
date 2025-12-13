@@ -229,34 +229,7 @@ fun AlarmRingingContent(
                     .padding(horizontal = 24.dp, vertical = 48.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // "Notification-like" Header
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFF1C1C1E)) // Notification gray bg
-                        .padding(16.dp)
-                ) {
-                   Column {
-                       Row(
-                           verticalAlignment = Alignment.CenterVertically
-                       ) {
-                            Icon(
-                                imageVector = androidx.compose.material.icons.Icons.Default.AccessAlarm, // Or app icon
-                                contentDescription = "App Icon",
-                                tint = Color.Gray,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.size(8.dp))
-                            Text("Alarmy • Just now", color = Color.Gray, fontSize = 12.sp)
-                       }
-                       Spacer(modifier = Modifier.height(8.dp))
-                       Text("Alarmy", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                       Text("Tap to dismiss ⏰ ⏰ ⏰ ⏰ ⏰", color = Color.Gray, fontSize = 12.sp)
-                   }
-                }
-                
-                Spacer(modifier = Modifier.weight(0.1f))
+                Spacer(modifier = Modifier.weight(0.3f))
 
                 // Big Time
                 Text(
