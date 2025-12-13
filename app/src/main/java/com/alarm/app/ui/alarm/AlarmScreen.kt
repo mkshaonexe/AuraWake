@@ -99,8 +99,31 @@ fun AlarmScreen(
     val amPmState = remember { mutableStateOf(if (isPm) 1 else 0) } // 0=AM, 1=PM
 
     var selectedChallenge by remember { mutableStateOf(ChallengeType.NONE) }
-    val selectedDays = remember { mutableStateListOf<Int>() } // 1=Sun, ..., 7=Sat
-    var isDaily by remember { mutableStateOf(false) }
+    val selectedDays = remember { mutableStateListOf<Int>().apply { addAll(listOf(1,2,3,4,5,6,7)) } } // 1=Sun, ..., 7=Sat - Default to all days
+    var isDaily by remember { mutableStateOf(true) } // Default to Daily mode
+
+    val ringInString by remember {
+        derivedStateOf {
+            val now = Calendar.getInstance()
+            val target = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, selectedHour)
+                set(Calendar.MINUTE, selectedMinute)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            
+            if (target.before(now)) {
+                target.add(Calendar.DAY_OF_YEAR, 1)
+            }
+            
+            val diffMillis = target.timeInMillis - now.timeInMillis
+            val diffMinutes = diffMillis / (1000 * 60)
+            val hours = diffMinutes / 60
+            val minutes = diffMinutes % 60
+            
+            "Ring in $hours hr. $minutes min"
+        }
+    }
 
     // Init Logic for scrolling to current time would be complex with Pager w/o `scrollToPage` initial
     // Keep internal hour/min state and update it when pager verification settles.
@@ -223,7 +246,15 @@ fun AlarmScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = ringInString,
+                color = Color.Gray,
+                fontSize = 16.sp // Slightly larger for readability
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Daily Checkbox
             Row(
