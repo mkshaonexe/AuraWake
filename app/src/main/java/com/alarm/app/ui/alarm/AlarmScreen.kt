@@ -99,6 +99,7 @@ fun AlarmScreen(
     val amPmState = remember { mutableStateOf(if (isPm) 1 else 0) } // 0=AM, 1=PM
 
     var selectedChallenge by remember { mutableStateOf(ChallengeType.NONE) }
+    var alarmName by remember { mutableStateOf("") }
     val selectedDays = remember { mutableStateListOf<Int>().apply { addAll(listOf(1,2,3,4,5,6,7)) } } // 1=Sun, ..., 7=Sat - Default to all days
     var isDaily by remember { mutableStateOf(true) } // Default to Daily mode
 
@@ -157,23 +158,41 @@ fun AlarmScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             
-            // Name Input Placeholder
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(vertical = 16.dp)
-            ) {
-                 Icon(
-                     imageVector = Icons.Default.Edit, // Placeholder for Sun icon
-                     contentDescription = null,
-                     tint = Color.Yellow,
-                     modifier = Modifier.size(24.dp)
-                 )
-                 Spacer(modifier = Modifier.width(8.dp))
-                 Text("Please fill in the alarm name", color = Color.Gray)
-                 Spacer(modifier = Modifier.width(8.dp))
-                 Icon(Icons.Default.Edit, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
-            }
+            // Name Input Field
+            androidx.compose.material3.OutlinedTextField(
+                value = alarmName,
+                onValueChange = { alarmName = it },
+                placeholder = { Text("Please fill in the alarm name", color = Color.Gray) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        tint = Color.Yellow,
+                        modifier = Modifier.size(20.dp)
+                    )
+                },
+                trailingIcon = {
+                    Icon(
+                        Icons.Default.Edit, 
+                        contentDescription = null, 
+                        tint = Color.Gray, 
+                        modifier = Modifier.size(16.dp)
+                    )
+                },
+                colors = androidx.compose.material3.TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White,
+                    focusedIndicatorColor = Color.Gray,
+                    unfocusedIndicatorColor = Color.Gray.copy(alpha = 0.5f)
+                ),
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            )
             
             // Wheel Time Picker
             Box(
@@ -380,7 +399,7 @@ fun AlarmScreen(
                 // Save Button
                 Button(
                     onClick = {
-                        viewModel.addAlarm(selectedHour, selectedMinute, selectedChallenge)
+                        viewModel.addAlarm(selectedHour, selectedMinute, selectedChallenge, alarmName)
                         navController.popBackStack()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3B30)),
