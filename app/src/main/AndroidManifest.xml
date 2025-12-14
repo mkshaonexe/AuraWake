@@ -55,6 +55,14 @@
             android:exported="false">
         </receiver>
         
+        <service
+            android:name=".service.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <receiver 
             android:name=".data.alarm.BootReceiver"
             android:exported="true">

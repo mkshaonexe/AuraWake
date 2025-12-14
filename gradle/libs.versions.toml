@@ -12,6 +12,7 @@ navigationCompose = "2.8.5"
 room = "2.6.1"
 ksp = "2.0.21-1.0.27"
 googleServices = "4.4.2"
+firebaseBom = "33.7.0"
 cameraX = "1.4.0"
 mlKitBarcode = "17.3.0"
 gson = "2.11.0"
@@ -50,6 +51,11 @@ androidx-camera-view = { group = "androidx.camera", name = "camera-view", versio
 
 # ML Kit
 google-mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlKitBarcode" }
+
+# Firebase
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 
 # Utils
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
