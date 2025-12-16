@@ -67,7 +67,7 @@ class AlarmService : Service() {
             }
             "ACTION_DISMISS" -> {
                 Log.d("AlarmService", "❌ Dismiss clicked")
-                overlayHelper?.removeOverlay()
+                overlayHelper?.removeOverlay() // Ensure overlay is removed
                 
                 // Check if there is a challenge
                 val hasChallenge = challengeType != null && challengeType != "NONE"
@@ -82,7 +82,6 @@ class AlarmService : Service() {
                         putExtra("START_CHALLENGE", true) // Signal to start challenge immediately
                     }
                     startActivity(fullScreenIntent)
-                    // Do NOT stopSelf() here, let the UI handle it after challenge
                 } else {
                     Log.d("AlarmService", "✅ No challenge, stopping service")
                     stopSelf()
@@ -93,31 +92,26 @@ class AlarmService : Service() {
         
         Log.d("AlarmService", "🔔 Starting alarm service for: $alarmId")
         
-        startForeground(NOTIFICATION_ID, createNotification(alarmId, challengeType))
+        // 1. Start Foreground with Full Screen Intent Notification (ALWAYS - Base Layer)
+        val notification = createNotification(alarmId, challengeType)
+        startForeground(NOTIFICATION_ID, notification)
+        
         intent?.let {
             val ringtoneUri = it.getStringExtra("RINGTONE_URI")
             startRinging(ringtoneUri)
         } ?: startRinging(null)
         startVibration()
         
-        // Show Overlay if permission granted
+        // 2. Hybrid Logic: If Overlay is permitted, Show Overlay (Strong Layer)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && android.provider.Settings.canDrawOverlays(this)) {
-             Log.d("AlarmService", "🛡️ Showing System Overlay")
+             Log.d("AlarmService", "🛡️ Hybrid Mode: Showing System Overlay")
              overlayHelper?.showOverlay(alarmId, challengeType)
         } else {
-             Log.w("AlarmService", "⚠️ Overlay permission missing - relying on Activity")
+             Log.d("AlarmService", "ℹ️ Hybrid Mode: Overlay not granted, relying on Full Screen Intent")
         }
         
-        // Acquire wake lock to ensure screen turns on (critical for Android 10+)
-        val powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-        val wakeLock = powerManager.newWakeLock(
-            android.os.PowerManager.FULL_WAKE_LOCK or 
-            android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP or
-            android.os.PowerManager.ON_AFTER_RELEASE,
-            "AlarmApp:AlarmScreenWakeLock"
-        )
-        wakeLock.acquire(10 * 1000L) // Hold for 10 seconds to allow activity launch
-        
+        // 3. Keep Activity Launch as backup/primary for non-overlay cases
+        // We do this AFTER startForeground to maximize chances of success
         val fullScreenIntent = Intent(this, MainActivity::class.java).apply {
             addFlags(
                 Intent.FLAG_ACTIVITY_NEW_TASK or 
@@ -132,43 +126,32 @@ class AlarmService : Service() {
         
         try {
             startActivity(fullScreenIntent)
-            Log.d("AlarmService", "✅ MainActivity launched with alarm screen")
+            Log.d("AlarmService", "✅ MainActivity launch attempted")
         } catch (e: Exception) {
-            Log.e("AlarmService", "❌ Failed to start MainActivity", e)
-        } finally {
-            // Release wake lock after a short delay
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                if (wakeLock.isHeld) wakeLock.release()
-            }, 5000)
+            Log.e("AlarmService", "ℹ️ MainActivity launch suppressed (normal in background), relying on Notification", e)
         }
 
-        return START_NOT_STICKY // Changed from START_REDELIVER_INTENT to avoid loop if crash? 
-        // User asked for persistence. STICKY is better? 
-        // Actually START_STICKY restarts service with null intent if killed.
-        // START_REDELIVER_INTENT restarts with original intent (preserving alarm ID).
-        // Let's keep START_REDELIVER_INTENT as it is safest for alarm reliability.
+        // Return START_STICKY to ensure service restarts if killed
+        return START_STICKY 
     }
     
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        Log.d("AlarmService", "⚠️ App Task Removed - Restarting Alarm Service UI")
+        Log.d("AlarmService", "⚠️ App Task Removed - Attempting to persist Alarm")
         
-        // Ensure overlay is shown if task removed
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && android.provider.Settings.canDrawOverlays(this)) {
-             // Overlay likely persists anyway, but let's be sure
-             // Accessing intent extras in onTaskRemoved might be tricky if not stored.
-             // Usually onTaskRemoved doesn't pass the original intent.
-        }
-        
-        // If the user swipes the app away, we want to bring the alarm screen back!
+        // 1. If Overlay is permitted, it likely stays.
+        // 2. We should try to restart the Activity.
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            // Ideally we should persist the current alarm ID to SharedPreferences to restore it fully,
-            // but if the Service is still running or restarting, `onStartCommand` might trigger.
-            // Using logic to recreate the Activity.
              putExtra("SHOW_ALARM_SCREEN", true)
         }
-        startActivity(intent)
+        try {
+            startActivity(intent)
+        } catch (e: Exception) { e.printStackTrace() }
+        
+        // 3. EXPERIMENTAL: Restart Service if it was killed?
+        // Usually START_STICKY handles this, but onTaskRemoved is just a callback.
+        // We don't stopSelf() here.
     }
 
     private fun createNotificationChannel() {
@@ -317,7 +300,7 @@ class AlarmService : Service() {
     
     override fun onDestroy() {
         super.onDestroy()
-        overlayHelper?.removeOverlay() // Ensure overlay is removed
+        overlayHelper?.removeOverlay()
         stopVolumeEnforcement() 
         mediaPlayer?.stop()
         mediaPlayer?.release()

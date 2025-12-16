@@ -38,10 +38,9 @@ class AlarmOverlayHelper(private val context: Context) : LifecycleOwner, ViewMod
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
     private val internalViewModelStore = ViewModelStore()
     private val dispatcher = OnBackPressedDispatcher {
-        // Fallback action: if back is pressed and not handled by UI, remove overlay?
-        // For an alarm, we typically want to block back, or maybe dismiss?
-        // Let's safe-guard by just doing nothing or maybe logging. 
-        // If we want it unskippable, do nothing.
+        // Intercept Back Button
+        // If we want to make it unskippable, we do NOTHING here.
+        // Or we could show a toast saying "Complete the challenge!"
     }
 
     init {
@@ -69,24 +68,25 @@ class AlarmOverlayHelper(private val context: Context) : LifecycleOwner, ViewMod
                     WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, // Full screen
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
                 PixelFormat.TRANSLUCENT
             )
             
-            // Critical: Allow touch events
+            // Critical: Allow touch events, but originally FLAG_NOT_FOCUSABLE was set which prevents key events (like Back).
+            // To intercept Back button, we need the window to be FOCUSABLE.
+            // So we REMOVE FLAG_NOT_FOCUSABLE.
             layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
 
             // Use themed context to avoid crash
             val themedContext = ContextThemeWrapper(context, R.style.Theme_AllarmApp)
             val composeView = ComposeView(themedContext)
 
-            // Attach Lifecycle Owners BEFORE setContent to avoid crash
+            // Attach Lifecycle Owners
             composeView.setViewTreeLifecycleOwner(this)
             composeView.setViewTreeViewModelStoreOwner(this)
             composeView.setViewTreeSavedStateRegistryOwner(this)
-            // Note: ViewTreeOnBackPressedDispatcherOwner isn't a standard extension yet in all versions or libs, 
-            // but we provide it via CompositionLocal below which is what Composable BackHandler needs.
-            // If needed: composeView.setViewTreeOnBackPressedDispatcherOwner(this) (check imports)
 
             composeView.setContent {
                 CompositionLocalProvider(LocalOnBackPressedDispatcherOwner provides this) {
@@ -99,7 +99,6 @@ class AlarmOverlayHelper(private val context: Context) : LifecycleOwner, ViewMod
                         startChallengeImmediately = false,
                         isPreview = false,
                         onSnooze = {
-                            // Handle Snooze
                             if (alarmId != null) {
                                 val intent = Intent(context, SnoozeReceiver::class.java).apply {
                                     action = "ACTION_SNOOZE"
@@ -109,14 +108,13 @@ class AlarmOverlayHelper(private val context: Context) : LifecycleOwner, ViewMod
                             } else {
                                 context.stopService(Intent(context, AlarmService::class.java))
                             }
-                            removeOverlay() // Close overlay on snooze
+                            removeOverlay() 
                         },
                         onDismiss = {
-                            // Handle Dismiss
                             context.stopService(Intent(context, AlarmService::class.java))
                             removeOverlay()
                         },
-                        onClosePreview = { /* Not applicable */ }
+                        onClosePreview = { }
                     )
                 }
             }
@@ -127,7 +125,6 @@ class AlarmOverlayHelper(private val context: Context) : LifecycleOwner, ViewMod
             overlayView = composeView
         } catch (e: Exception) {
             e.printStackTrace()
-            // Ensure we don't leave the helper in a broken state
             overlayView = null
         }
     }
