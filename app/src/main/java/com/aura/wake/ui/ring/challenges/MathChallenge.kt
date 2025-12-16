@@ -227,15 +227,28 @@ fun generateProblem(difficulty: com.aura.wake.data.model.Difficulty): Quad<Int, 
              val op = if(Random.nextBoolean()) "+" else "-"
              val n1 = Random.nextInt(20, 100)
              val n2 = Random.nextInt(10, 50)
-             Quad(n1, n2, 0, op)
+             
+             // Ensure positive result for subtraction
+             if (op == "-" && n2 > n1) {
+                 Quad(n2, n1, 0, op) // Swap them: Large - Small
+             } else {
+                 Quad(n1, n2, 0, op)
+             }
         }
         com.aura.wake.data.model.Difficulty.HARD -> {
              // A * B + C
              Quad(Random.nextInt(5, 15), Random.nextInt(5, 12), Random.nextInt(1, 20), "*+")
         }
         com.aura.wake.data.model.Difficulty.VERY_HARD -> {
-             // (A * B) - C ... same structure as hard for storage but display differs
-             Quad(Random.nextInt(10, 20), Random.nextInt(5, 15), Random.nextInt(10, 50), "*-")
+             // (A * B) - C
+             val n1 = Random.nextInt(10, 20)
+             val n2 = Random.nextInt(5, 15)
+             val product = n1 * n2
+             // Ensure n3 is smaller than product to keep result positive
+             val maxN3 = product - 1
+             val n3 = Random.nextInt(10, if (maxN3 > 10) maxN3 else 11)
+             
+             Quad(n1, n2, n3, "*-")
         }
     }
 }
