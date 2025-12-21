@@ -78,15 +78,14 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    // Supabase - TEMPORARILY DISABLED DUE TO BUILD ISSUES
-    // TODO: Re-enable after fixing dependency resolution
-    // implementation(libs.supabase.postgrest)
-    // implementation(libs.supabase.realtime)
-    // implementation(libs.supabase.auth)
+    // Supabase
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.realtime)
+    implementation(libs.supabase.auth)
     
-    // Ktor (required for Supabase) - TEMPORARILY DISABLED
-    // implementation(libs.ktor.client.android)
-    // implementation(libs.ktor.client.core)
+    // Ktor (required for Supabase)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.core)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

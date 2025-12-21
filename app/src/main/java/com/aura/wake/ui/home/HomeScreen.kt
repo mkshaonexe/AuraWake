@@ -36,6 +36,8 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person // Added
 import androidx.compose.material.icons.filled.PieChart // Added
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Public // Added
+import androidx.compose.material.icons.filled.Group // Added
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -195,10 +197,11 @@ fun HomeScreen(
         CustomBottomNavigation(
             selectedTab = selectedTab,
             onTabSelected = { index ->
-                if (index == 3) {
-                    navController.navigate("profile")
-                } else {
-                    selectedTab = index
+                when (index) {
+                    0 -> selectedTab = 0
+                    1 -> navController.navigate("community")
+                    2 -> navController.navigate("friends")
+                    3 -> navController.navigate("profile")
                 }
             },
             modifier = Modifier
@@ -234,10 +237,10 @@ fun CustomBottomNavigation(
             verticalAlignment = Alignment.CenterVertically
         ) {
             val icons = listOf(
-                Icons.Default.Home,         // Home
-                Icons.Default.PieChart,     // History
-                Icons.Default.CheckCircle,  // Settings/Tasks 
-                Icons.Default.Person        // Profile
+                Icons.Default.Home,          // Home
+                Icons.Default.Public,        // Community
+                Icons.Default.Group,         // Friends 
+                Icons.Default.Person         // Profile
             )
             
             icons.forEachIndexed { index, icon ->

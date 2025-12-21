@@ -201,6 +201,12 @@ class MainActivity : ComponentActivity() {
                     composable("profile") {
                         com.aura.wake.ui.profile.ProfileScreen(navController = navController)
                     }
+                    composable("community") {
+                        com.aura.wake.ui.community.CommunityScreen(navController = navController)
+                    }
+                    composable("friends") {
+                        com.aura.wake.ui.friends.FriendsScreen(navController = navController)
+                    }
                     composable("overlay_permission") {
                         com.aura.wake.ui.permission.OverlayPermissionScreen(
                             onGoToSettings = {
