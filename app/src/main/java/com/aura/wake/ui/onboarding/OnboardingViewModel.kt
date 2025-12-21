@@ -20,10 +20,10 @@ class OnboardingViewModel(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    // Default to current time + 1 hour or 7:00 AM? User request image showed 07:00 AM.
-    // Let's default to 7:00 AM.
-    var selectedHour by mutableIntStateOf(7)
-    var selectedMinute by mutableIntStateOf(0)
+    // Default to current time
+    private val currentTime = Calendar.getInstance()
+    var selectedHour by mutableIntStateOf(currentTime.get(Calendar.HOUR_OF_DAY))
+    var selectedMinute by mutableIntStateOf(currentTime.get(Calendar.MINUTE))
     
     // Default Sound
     var selectedSound by mutableStateOf("Default")
