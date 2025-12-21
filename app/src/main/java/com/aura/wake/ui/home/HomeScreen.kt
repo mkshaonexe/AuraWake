@@ -62,6 +62,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf 
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.aura.wake.ui.alarm.AlarmOverviewDialog
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip // Added
@@ -295,6 +296,7 @@ fun HomeTabContent(
 ) {
     val context = LocalContext.current
     var ignoredPermissions by remember { mutableStateOf(setOf<String>()) }
+    var selectedAlarm by remember { mutableStateOf<Alarm?>(null) }
     
     // Permission States
     var hasOverlayPermission by remember { mutableStateOf(true) }
@@ -566,10 +568,23 @@ fun HomeTabContent(
                     onSkip = {
                         Toast.makeText(context, "Alarm skipped once", Toast.LENGTH_SHORT).show()
                     },
-                    onClick = { navController.navigate("edit_alarm/${alarm.id}") }
+                    onClick = { selectedAlarm = alarm } // Show Overview instead of navigate
                 )
             }
         }
+    }
+    
+    if (selectedAlarm != null) {
+        AlarmOverviewDialog(
+            alarm = selectedAlarm!!,
+            onDismiss = { selectedAlarm = null },
+            onEdit = { 
+                selectedAlarm?.let {
+                    navController.navigate("edit_alarm/${it.id}") 
+                }
+                selectedAlarm = null
+            }
+        )
     }
 }
 

@@ -6,8 +6,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Profile(
     val id: String,
-    val email: String?,
-    val username: String?
+    val email: String? = null,
+    val username: String? = null,
+    @SerialName("full_name") val fullName: String? = null,
+    @SerialName("avatar_url") val avatarUrl: String? = null
 )
 
 @Serializable
@@ -18,11 +20,20 @@ data class Friendship(
 )
 
 @Serializable
+data class Community(
+    val id: String,
+    val name: String,
+    val description: String? = null,
+    @SerialName("icon_name") val iconName: String? = null,
+    @SerialName("member_count") val memberCount: Int = 0
+)
+
+@Serializable
 data class GlobalMessage(
-    val id: String? = null, // Null for new messages
+    val id: String? = null, 
+    @SerialName("community_id") val communityId: String,
     @SerialName("user_id") val userId: String,
     val content: String,
     @SerialName("created_at") val createdAt: String? = null,
-    // Transient field for UI if we join, but for now we might fetch separately or just show ID
-    val profile: Profile? = null 
+    @SerialName("profiles") val profile: Profile? = null 
 )
