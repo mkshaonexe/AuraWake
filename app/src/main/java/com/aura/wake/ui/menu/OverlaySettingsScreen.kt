@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -43,8 +44,14 @@ fun OverlaySettingsScreen(navController: NavController) {
     val application = context.applicationContext as AlarmApplication
     val settingsRepository = remember { application.container.settingsRepository }
     
-    // State for the current URI
-    var overlayUri by remember { mutableStateOf(settingsRepository.getOverlayImageUri()) }
+    // State for the currently SAVED URI
+    val savedUri by remember { mutableStateOf(settingsRepository.getOverlayImageUri()) }
+    
+    // State for the currently SELECTED (preview) URI
+    var selectedUri by remember { mutableStateOf<String?>(null) }
+    
+    // The URI to show in preview: either selected or saved
+    val displayUri = selectedUri ?: savedUri
     
     // Permission state for media access
     val mediaPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -60,7 +67,7 @@ fun OverlaySettingsScreen(navController: NavController) {
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            // Take persistable permission
+            // Take persistable permission immediately to ensure access
             val flag = Intent.FLAG_GRANT_READ_URI_PERMISSION
             try {
                 context.contentResolver.takePersistableUriPermission(uri, flag)
@@ -68,9 +75,8 @@ fun OverlaySettingsScreen(navController: NavController) {
                 e.printStackTrace()
             }
             
-            val uriString = uri.toString()
-            overlayUri = uriString
-            settingsRepository.saveOverlayImageUri(uriString)
+            // Only update selectedUri, do not save yet
+            selectedUri = uri.toString()
         }
     }
     
@@ -78,23 +84,28 @@ fun OverlaySettingsScreen(navController: NavController) {
     fun selectPhoto() {
         when {
             permissionState.status.isGranted -> {
-                // Permission already granted, open picker
                 photoPickerLauncher.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                 )
             }
             else -> {
-                // Request permission first
                 permissionState.launchPermissionRequest()
             }
         }
     }
     
-    // Launch photo picker after permission is granted
-    LaunchedEffect(permissionState.status.isGranted) {
-        if (permissionState.status.isGranted) {
-            // Permission was just granted, but don't auto-launch
-            // User needs to tap button again
+
+    
+    // Hack to track "current effective saved" to hide save button after save
+    var effectiveSavedUri by remember { mutableStateOf(savedUri) }
+    
+    // Update effective saved when saving
+    fun performSave() {
+        selectedUri?.let { uri ->
+            settingsRepository.saveOverlayImageUri(uri)
+            effectiveSavedUri = uri
+            selectedUri = null // Clear preview, now it is the saved one
+            android.widget.Toast.makeText(context, "✨ Image Saved! ✨", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -130,31 +141,73 @@ fun OverlaySettingsScreen(navController: NavController) {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                 Button(
-                    onClick = { selectPhoto() },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(32.dp),
-                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Image, contentDescription = null, tint = Color.Black)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        if (permissionState.status.isGranted) "Select Image" else "Grant Permission & Select Image",
-                        color = Color.Black, 
-                        fontSize = 16.sp, 
-                        fontWeight = FontWeight.Bold
-                    )
+                    // SELECT BUTTON
+                    Button(
+                        onClick = { selectPhoto() },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(50), // Fully rounded pill
+                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                        modifier = Modifier.height(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Image, 
+                            contentDescription = null, 
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            if (permissionState.status.isGranted) "Select" else "Grant Access",
+                            color = Color.Black, 
+                            fontSize = 14.sp, 
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    // SAVE BUTTON (Only show if we have a NEW selection)
+                    if (selectedUri != null && selectedUri != effectiveSavedUri) {
+                        Spacer(modifier = Modifier.width(16.dp))
+                        
+                        Button(
+                            onClick = { performSave() },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF66BB6A)), // Cute green
+                            shape = RoundedCornerShape(50),
+                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Check, 
+                                contentDescription = null, 
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Save",
+                                color = Color.White, 
+                                fontSize = 14.sp, 
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
                 
-                 if (overlayUri != null) {
+                // Reset Option
+                 if (displayUri != null) {
                     TextButton(
                         onClick = {
-                            overlayUri = null
+                            selectedUri = null
+                            effectiveSavedUri = null
                             settingsRepository.saveOverlayImageUri(null)
                         },
                         modifier = Modifier.padding(top = 8.dp)
                     ) {
-                        Text("Reset to Default Moon", color = Color.Red, fontSize = 14.sp)
+                        Text("Reset to Default Moon", color = Color.Red, fontSize = 12.sp)
                     }
                 }
             }
@@ -222,19 +275,20 @@ fun OverlaySettingsScreen(navController: NavController) {
             )
             
             // Mock Alarm Screen (Miniature)
-            // Cuter, smaller aspect ratio
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f) // Take available space but leave room for text
+                    .weight(1f)
                     .clip(RoundedCornerShape(32.dp))
                     .border(1.dp, Color(0xFF333333), RoundedCornerShape(32.dp))
                     .background(Color.Black)
             ) {
                  // Background Image (Full Screen)
-                 if (overlayUri != null) {
+                 val currentDisplayUri = selectedUri ?: effectiveSavedUri
+                 
+                 if (currentDisplayUri != null) {
                     Image(
-                        painter = rememberAsyncImagePainter(overlayUri),
+                        painter = rememberAsyncImagePainter(currentDisplayUri),
                         contentDescription = "Custom Overlay",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -259,15 +313,15 @@ fun OverlaySettingsScreen(navController: NavController) {
                       Text(
                          text = String.format("%02d:%02d", currentTime.get(java.util.Calendar.HOUR_OF_DAY), currentTime.get(java.util.Calendar.MINUTE)),
                          color = Color.White, 
-                         fontSize = 42.sp, // Slightly smaller for "cute" compact look in preview
+                         fontSize = 42.sp, 
                          fontWeight = FontWeight.Bold
                       )
                      
                      // The Overlay Image (Moon or Custom)
-                     if (overlayUri == null) {
+                     if (currentDisplayUri == null) {
                          Box(
                             modifier = Modifier
-                                .size(140.dp) // Smaller moon
+                                .size(140.dp) 
                                 .clip(CircleShape)
                                 .background(Color.DarkGray)
                                 .border(2.dp, Color.White.copy(alpha = 0.1f), CircleShape),
@@ -276,7 +330,6 @@ fun OverlaySettingsScreen(navController: NavController) {
                              Text("🌑", fontSize = 80.sp)
                          }
                      } else {
-                         // Spacer to keep layout similar roughly
                          Spacer(modifier = Modifier.size(140.dp))
                      }
                      
@@ -285,7 +338,7 @@ fun OverlaySettingsScreen(navController: NavController) {
                         shape = RoundedCornerShape(percent = 50),
                         color = Color.White,
                         modifier = Modifier
-                            .height(36.dp) // Smaller button
+                            .height(36.dp) 
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
