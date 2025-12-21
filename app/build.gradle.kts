@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
 }
@@ -86,8 +87,12 @@ dependencies {
     // Ktor (required for Supabase)
     implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.core)
+    
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

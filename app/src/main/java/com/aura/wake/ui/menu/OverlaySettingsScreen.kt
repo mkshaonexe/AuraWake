@@ -28,8 +28,15 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.aura.wake.AlarmApplication
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
+import android.os.Build
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun OverlaySettingsScreen(navController: NavController) {
     val context = LocalContext.current
@@ -38,6 +45,15 @@ fun OverlaySettingsScreen(navController: NavController) {
     
     // State for the current URI
     var overlayUri by remember { mutableStateOf(settingsRepository.getOverlayImageUri()) }
+    
+    // Permission state for media access
+    val mediaPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        android.Manifest.permission.READ_MEDIA_IMAGES
+    } else {
+        android.Manifest.permission.READ_EXTERNAL_STORAGE
+    }
+    
+    val permissionState = rememberPermissionState(mediaPermission)
     
     // Photo Picker Launcher
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -55,6 +71,30 @@ fun OverlaySettingsScreen(navController: NavController) {
             val uriString = uri.toString()
             overlayUri = uriString
             settingsRepository.saveOverlayImageUri(uriString)
+        }
+    }
+    
+    // Function to handle photo selection
+    fun selectPhoto() {
+        when {
+            permissionState.status.isGranted -> {
+                // Permission already granted, open picker
+                photoPickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
+            else -> {
+                // Request permission first
+                permissionState.launchPermissionRequest()
+            }
+        }
+    }
+    
+    // Launch photo picker after permission is granted
+    LaunchedEffect(permissionState.status.isGranted) {
+        if (permissionState.status.isGranted) {
+            // Permission was just granted, but don't auto-launch
+            // User needs to tap button again
         }
     }
 
@@ -91,18 +131,19 @@ fun OverlaySettingsScreen(navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                  Button(
-                    onClick = {
-                        photoPickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
+                    onClick = { selectPhoto() },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                     shape = RoundedCornerShape(32.dp),
                     modifier = Modifier.fillMaxWidth().height(56.dp)
                 ) {
                     Icon(Icons.Default.Image, contentDescription = null, tint = Color.Black)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("Select Image", color = Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        if (permissionState.status.isGranted) "Select Image" else "Grant Permission & Select Image",
+                        color = Color.Black, 
+                        fontSize = 16.sp, 
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 
                  if (overlayUri != null) {
@@ -129,6 +170,47 @@ fun OverlaySettingsScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            
+            // Permission Info Card (if not granted)
+            if (!permissionState.status.isGranted) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF1A1A1A)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Image,
+                            contentDescription = null,
+                            tint = Color(0xFFFFB74D),
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Media Access Required",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Grant permission to select photos from your device for the alarm overlay background.",
+                                color = Color.Gray,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp
+                            )
+                        }
+                    }
+                }
+            }
             
             // Preview Label
             Text(

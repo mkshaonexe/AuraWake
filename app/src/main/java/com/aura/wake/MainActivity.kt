@@ -28,6 +28,10 @@ import androidx.compose.runtime.DisposableEffect
 import com.aura.wake.ui.AppViewModelProvider
 import androidx.navigation.compose.navigation
 import com.aura.wake.ui.menu.MenuScreen
+import com.aura.wake.ui.update.UpdateViewModel
+import com.aura.wake.ui.components.UpdateAvailableDialog
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 class MainActivity : ComponentActivity() {
@@ -154,6 +158,45 @@ class MainActivity : ComponentActivity() {
                    analyticsManager.logPermissionStatus("notification", hasNotificationPermission) 
                    analyticsManager.logPermissionStatus("overlay", hasOverlayPermission)
                 }
+                
+                // Update Checking
+                val updateViewModel: UpdateViewModel = viewModel(
+                    factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                            return UpdateViewModel(context) as T
+                        }
+                    }
+                )
+                
+                val showUpdateDialog by updateViewModel.showUpdateDialog.collectAsState()
+                val versionInfo by updateViewModel.versionInfo.collectAsState()
+                
+                // Check for updates on app start
+                LaunchedEffect(Unit) {
+                    updateViewModel.checkForUpdates()
+                }
+                
+                // Show update dialog if available
+                if (showUpdateDialog && versionInfo != null) {
+                    UpdateAvailableDialog(
+                        versionInfo = versionInfo!!,
+                        onUpdate = {
+                            updateViewModel.openPlayStore()
+                            analyticsManager.logEvent("update_initiated", mapOf(
+                                "from_version" to versionInfo!!.currentVersionName,
+                                "to_version" to versionInfo!!.latestVersionName
+                            ))
+                        },
+                        onDismiss = {
+                            updateViewModel.dismissUpdate()
+                            analyticsManager.logEvent("update_dismissed", mapOf(
+                                "version" to versionInfo!!.latestVersionName
+                            ))
+                        }
+                    )
+                }
+
 
                 val startDestination = if (isRinging) {
                     "ringing"
