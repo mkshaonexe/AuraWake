@@ -103,7 +103,7 @@ class AlarmViewModel(
         viewModelScope.launch {
             val newAlarm = alarm.copy(
                 id = UUID.randomUUID().toString(),
-                isEnabled = false // Duplicated alarms match original or off.
+                isEnabled = alarm.isEnabled // Preserve original alarm's enabled state
             )
             repository.insertAlarm(newAlarm)
             if (newAlarm.isEnabled) {
