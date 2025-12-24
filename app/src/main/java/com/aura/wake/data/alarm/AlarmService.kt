@@ -336,6 +336,11 @@ class AlarmService : Service() {
         mediaPlayer?.release()
         mediaPlayer = null
         vibrator?.cancel()
+        
+        // Broadcast that alarm has stopped so MainActivity can close if needed
+        val intent = Intent("com.aura.wake.ACTION_ALARM_STOPPED")
+        sendBroadcast(intent)
+        
         Log.d("AlarmService", "🛑 Alarm service stopped")
     }
     private fun startNagging(alarmId: String?, challengeType: String?) {
