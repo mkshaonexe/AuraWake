@@ -171,10 +171,12 @@ fun HomeScreen(
                         onClick = { navController.navigate("create_alarm") },
                         containerColor = Color(0xFFFF5252), // Bright Red
                         contentColor = Color.White,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                        modifier = Modifier.padding(bottom = 80.dp) // Lift FAB above custom nav bar
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp), // Reduced from 16.dp
+                        modifier = Modifier
+                            .size(52.dp) // Smaller FAB size
+                            .padding(bottom = 80.dp) // Lift FAB above custom nav bar
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Alarm")
+                        Icon(Icons.Default.Add, contentDescription = "Add Alarm", modifier = Modifier.size(24.dp))
                     }
                 }
             }
