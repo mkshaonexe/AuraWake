@@ -82,7 +82,7 @@ fun AlarmRingingScreen(
     LaunchedEffect(alarmId) {
         if (alarmId != null) {
             try {
-                val alarm = alarmRepository.getAlarmStream(alarmId).first()
+                val alarm = alarmRepository.getAlarmById(alarmId)
                 alarm?.let {
                     alarmHour = it.hour
                     alarmMinute = it.minute
