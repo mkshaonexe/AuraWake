@@ -734,8 +734,8 @@ fun AlarmCard(
     val containerModifier = if (alarm.isEnabled) {
         Modifier
             .fillMaxWidth()
-            .height(90.dp) // Slight taller for comfort
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+            .height(70.dp) // Reduced from 90.dp
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(18.dp)) // Reduced from 24.dp
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
@@ -752,15 +752,15 @@ fun AlarmCard(
                         Color.Transparent
                     )
                 ), 
-                androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
+                androidx.compose.foundation.shape.RoundedCornerShape(18.dp) // Reduced from 24.dp
             )
     } else {
          Modifier
             .fillMaxWidth()
-            .height(90.dp)
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+            .height(70.dp) // Reduced from 90.dp
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(18.dp)) // Reduced from 24.dp
             .background(Color(0xFF151517)) // Darker when disabled
-            .border(1.dp, Color.White.copy(alpha = 0.05f), androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.05f), androidx.compose.foundation.shape.RoundedCornerShape(18.dp)) // Reduced from 24.dp
     }
 
     Box(
@@ -769,7 +769,7 @@ fun AlarmCard(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp), // More breathing room
+                .padding(horizontal = 18.dp), // Reduced from 24.dp
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -785,28 +785,28 @@ fun AlarmCard(
                     
                     Text(
                         text = "$hour:$minuteStr",
-                        fontSize = 36.sp, // Larger time
+                        fontSize = 30.sp, // Reduced from 36.sp
                         fontWeight = if (alarm.isEnabled) FontWeight.Bold else FontWeight.SemiBold,
                         color = if (alarm.isEnabled) Color.White else Color.Gray,
                         letterSpacing = (-1).sp
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(5.dp)) // Reduced from 6.dp
                     Text(
                         text = amPm,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp, // Reduced from 16.sp
                         fontWeight = FontWeight.Medium,
                         color = if (alarm.isEnabled) Color(0xFFEEEEEE) else Color.DarkGray,
-                        modifier = Modifier.padding(bottom = 6.dp)
+                        modifier = Modifier.padding(bottom = 5.dp) // Reduced from 6.dp
                     )
                     
                     // Mission Icon
                     val icon = getChallengeIcon(alarm.challengeType)
                     if (icon != null) {
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(10.dp)) // Reduced from 12.dp
                         Box(
                             modifier = Modifier
-                                .padding(bottom = 6.dp)
-                                .size(28.dp)
+                                .padding(bottom = 5.dp) // Reduced from 6.dp
+                                .size(24.dp) // Reduced from 28.dp
                                 .clip(androidx.compose.foundation.shape.CircleShape)
                                 .background(if (alarm.isEnabled) Color(0xFF333333) else Color.Transparent),
                             contentAlignment = Alignment.Center
@@ -815,7 +815,7 @@ fun AlarmCard(
                                 imageVector = icon,
                                 contentDescription = null,
                                 tint = if (alarm.isEnabled) PrimaryRed else Color.DarkGray,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(14.dp) // Reduced from 16.dp
                             )
                         }
                     }
@@ -823,8 +823,8 @@ fun AlarmCard(
 
                 // Days
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp), // More spacing
-                    modifier = Modifier.padding(top = 4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(5.dp), // Reduced from 6.dp
+                    modifier = Modifier.padding(top = 3.dp) // Reduced from 4.dp
                 ) {
                     val days = listOf("S", "M", "T", "W", "T", "F", "S")
                     days.forEachIndexed { index, day ->
@@ -834,7 +834,7 @@ fun AlarmCard(
                         
                         Text(
                             text = day,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp, // Reduced from 12.sp
                             color = if (isActive && isAlarmEnabled) AccentOrange else if (isActive) AccentOrange.copy(alpha = 0.5f) else Color.DarkGray,
                             fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium
                         )
