@@ -85,6 +85,9 @@ import android.view.HapticFeedbackConstants
 import android.view.SoundEffectConstants
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.material3.TextButton
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -98,6 +101,19 @@ fun AlarmScreen(
 ) {
     val context = LocalContext.current
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+    
+    // Battery optimization permission state
+    var showBatteryPermissionDialog by remember { mutableStateOf(false) }
+    var hasBatteryPermission by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val pm = context.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+                pm.isIgnoringBatteryOptimizations(context.packageName)
+            } else {
+                true
+            }
+        )
+    }
 
     val currentTime = Calendar.getInstance()
     var selectedHour by remember { mutableStateOf(currentTime.get(Calendar.HOUR_OF_DAY)) }
@@ -176,6 +192,55 @@ fun AlarmScreen(
                 // No need to manually set isPm or amPmState here, the LaunchedEffect(selectedHour) above will handle it.
             }
         }
+    }
+    
+    // Battery Permission Dialog
+    if (showBatteryPermissionDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showBatteryPermissionDialog = false },
+            title = {
+                Text(
+                    "Battery Permission Required",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            },
+            text = {
+                Text(
+                    "Without this permission, your device OS may kill the alarm app for battery optimization and alarms won't ring reliably.\n\nPlease grant background running permission to ensure your alarms work properly.",
+                    color = Color.Gray,
+                    lineHeight = 20.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showBatteryPermissionDialog = false
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            val intent = Intent().apply {
+                                action = android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                                data = Uri.parse("package:${context.packageName}")
+                            }
+                            try {
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                val fallback = Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                                context.startActivity(fallback)
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3B30))
+                ) {
+                    Text("Grant Permission")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBatteryPermissionDialog = false }) {
+                    Text("Cancel", color = Color.Gray)
+                }
+            },
+            containerColor = Color(0xFF2C2C2E)
+        )
     }
 
     Scaffold(
@@ -480,27 +545,37 @@ fun AlarmScreen(
                 // Save Button
                 Button(
                     onClick = {
-                        if (alarmId == null) {
-                            viewModel.addAlarm(
-                                selectedHour, 
-                                selectedMinute, 
-                                selectedChallenge, 
-                                alarmName,
-                                selectedRingtoneUri,
-                                selectedRingtoneTitle
-                            )
-                        } else {
-                            viewModel.updateAlarmDetails(
-                                alarmId,
-                                selectedHour,
-                                selectedMinute,
-                                selectedChallenge,
-                                alarmName,
-                                selectedRingtoneUri,
-                                selectedRingtoneTitle
-                            )
+                        // Check battery permission before saving
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            val pm = context.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+                            hasBatteryPermission = pm.isIgnoringBatteryOptimizations(context.packageName)
                         }
-                        navController.popBackStack()
+                        
+                        if (!hasBatteryPermission) {
+                            showBatteryPermissionDialog = true
+                        } else {
+                            if (alarmId == null) {
+                                viewModel.addAlarm(
+                                    selectedHour, 
+                                    selectedMinute, 
+                                    selectedChallenge, 
+                                    alarmName,
+                                    selectedRingtoneUri,
+                                    selectedRingtoneTitle
+                                )
+                            } else {
+                                viewModel.updateAlarmDetails(
+                                    alarmId,
+                                    selectedHour,
+                                    selectedMinute,
+                                    selectedChallenge,
+                                    alarmName,
+                                    selectedRingtoneUri,
+                                    selectedRingtoneTitle
+                                )
+                            }
+                            navController.popBackStack()
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3B30)),
                     shape = RoundedCornerShape(24.dp), // More rounded
