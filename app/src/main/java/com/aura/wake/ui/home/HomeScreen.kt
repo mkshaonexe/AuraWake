@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -172,7 +173,9 @@ fun HomeScreen(
                         containerColor = Color(0xFFFF5252), // Bright Red
                         contentColor = Color.White,
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                        modifier = Modifier.size(48.dp) // Smaller size to avoid overlap
+                        modifier = Modifier
+                            .size(48.dp) // Smaller size to avoid overlap
+                            .offset(y = (-100).dp) // Move FAB up to avoid bottom nav overlap
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Add Alarm", modifier = Modifier.size(22.dp))
                     }
