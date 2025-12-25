@@ -50,6 +50,10 @@ import androidx.compose.material3.IconButton // Added
 import androidx.compose.material.icons.Icons // Added for convenience if needed, but specific is better
 import androidx.compose.material.icons.filled.Close // Added
 import java.util.Calendar
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun AlarmRingingScreen(
@@ -66,9 +70,43 @@ fun AlarmRingingScreen(
         if (initialChallengeTypeStr != null) ChallengeType.valueOf(initialChallengeTypeStr) else ChallengeType.NONE
     } catch (e: Exception) { ChallengeType.NONE }
 
+    // Get repositories
+    val application = context.applicationContext as com.aura.wake.AlarmApplication
+    val wakeHistoryRepository = remember { application.container.wakeHistoryRepository }
+    val alarmRepository = remember { application.container.alarmRepository }
+    
+    // Fetch alarm details if we have an ID
+    var alarmHour by remember { mutableStateOf(0) }
+    var alarmMinute by remember { mutableStateOf(0) }
+    
+    LaunchedEffect(alarmId) {
+        if (alarmId != null) {
+            try {
+                val alarm = alarmRepository.getAlarmStream(alarmId).first()
+                alarm?.let {
+                    alarmHour = it.hour
+                    alarmMinute = it.minute
+                }
+            } catch (e: Exception) {
+                // Alarm not found, continue without recording
+            }
+        }
+    }
+
     // Function to stop alarm and navigate home (called AFTER challenge success)
     val finishAlarm: () -> Unit = {
         if (!isPreview) {
+            // Record wake-up in history
+            if (alarmId != null && alarmHour != 0) {
+                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                    try {
+                        wakeHistoryRepository.recordWakeUp(alarmHour, alarmMinute)
+                    } catch (e: Exception) {
+                        // Failed to record, but don't block alarm dismissal
+                    }
+                }
+            }
+            
             context.stopService(Intent(context, AlarmService::class.java))
             navController.navigate("home") { 
                 popUpTo("ringing") { inclusive = true } 

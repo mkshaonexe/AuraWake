@@ -7,10 +7,11 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.aura.wake.data.model.Alarm
 
-@Database(entities = [Alarm::class], version = 2, exportSchema = false)
+@Database(entities = [Alarm::class, com.aura.wake.data.model.AlarmWakeHistory::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AlarmDatabase : RoomDatabase() {
     abstract fun alarmDao(): AlarmDao
+    abstract fun wakeHistoryDao(): WakeHistoryDao
 
     companion object {
         @Volatile

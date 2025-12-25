@@ -6,6 +6,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,8 +38,22 @@ fun TrackerSection() {
 
 @Composable
 fun ContributionHeatmap() {
-    // 1. Generate Dummy Data (Last 26 Weeks -> approx 6 months)
-    val weeksData = remember { generateHeatmapData(26) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val application = context.applicationContext as com.aura.wake.AlarmApplication
+    val wakeHistoryRepository = remember { application.container.wakeHistoryRepository }
+    
+    // Fetch wake history data
+    var weeksData by remember { mutableStateOf<List<WeekData>>(emptyList()) }
+    
+    LaunchedEffect(Unit) {
+        try {
+            val history = wakeHistoryRepository.getHistoryForWeeks(26)
+            weeksData = generateHeatmapDataFromHistory(history, wakeHistoryRepository)
+        } catch (e: Exception) {
+            // If error, show empty state
+            weeksData = generateHeatmapData(26)
+        }
+    }
     
     // 2. Layout
     Row(modifier = Modifier.fillMaxWidth()) {
@@ -166,31 +184,84 @@ fun generateHeatmapData(numWeeks: Int): List<WeekData> {
     val weeks = mutableListOf<WeekData>()
     val cal = Calendar.getInstance()
     
-    // Go back 'numWeeks'
-    cal.add(Calendar.WEEK_OF_YEAR, -numWeeks)
-    
+    // Start from current week and go back
     var lastMonth = -1
 
     repeat(numWeeks) {
         val days = mutableListOf<Int>()
         repeat(7) {
-            // Random activity
-            val r = Random.nextFloat()
-            val level = if (r > 0.7) Random.nextInt(1, 5) else 0
-            days.add(level)
+            // Empty data (level 0)
+            days.add(0)
         }
         
         val currentMonth = cal.get(Calendar.MONTH)
         val monthName = if (currentMonth != lastMonth) getMonthName(currentMonth) else ""
-        // Only show label if it's the first week of the month AND not the very first column (looks cleaner usually)
-        // OR just whenever month changes
         val isNewMonth = currentMonth != lastMonth
         
         weeks.add(WeekData(monthName, isNewMonth, days))
         
         lastMonth = currentMonth
-        cal.add(Calendar.WEEK_OF_YEAR, 1)
+        cal.add(Calendar.WEEK_OF_YEAR, -1) // Go backwards in time
     }
+    return weeks
+}
+
+/**
+ * Generate heatmap data from real wake history
+ * Shows current month first (reverse chronological order)
+ */
+fun generateHeatmapDataFromHistory(
+    history: List<com.aura.wake.data.model.AlarmWakeHistory>, 
+    repository: com.aura.wake.data.repository.WakeHistoryRepository
+): List<WeekData> {
+    val weeks = mutableListOf<WeekData>()
+    val cal = Calendar.getInstance()
+    
+    // Create a map of date to wake history for quick lookup
+    val historyMap = history.associateBy { 
+        val c = Calendar.getInstance()
+        c.timeInMillis = it.date
+        c.get(Calendar.DAY_OF_YEAR) to c.get(Calendar.YEAR)
+    }
+    
+    var lastMonth = -1
+
+    repeat(26) { weekIndex ->
+        val days = mutableListOf<Int>()
+        
+        // For each day of the week (Sunday to Saturday)
+        repeat(7) { dayIndex ->
+            val tempCal = Calendar.getInstance()
+            tempCal.timeInMillis = cal.timeInMillis
+            tempCal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY + dayIndex)
+            
+            val dayOfYear = tempCal.get(Calendar.DAY_OF_YEAR)
+            val year = tempCal.get(Calendar.YEAR)
+            
+            // Check if we have wake history for this day
+            val wakeHistory = historyMap[dayOfYear to year]
+            val level = if (wakeHistory != null && wakeHistory.status == com.aura.wake.data.model.WakeStatus.COMPLETED) {
+                // Calculate intensity based on alarm hour
+                val wakeUpCal = Calendar.getInstance()
+                wakeUpCal.timeInMillis = wakeHistory.wakeUpTime
+                val wakeUpHour = wakeUpCal.get(Calendar.HOUR_OF_DAY)
+                repository.calculateIntensityLevel(wakeUpHour)
+            } else {
+                0 // No wake-up or missed/skipped
+            }
+            days.add(level)
+        }
+        
+        val currentMonth = cal.get(Calendar.MONTH)
+        val monthName = if (currentMonth != lastMonth) getMonthName(currentMonth) else ""
+        val isNewMonth = currentMonth != lastMonth
+        
+        weeks.add(WeekData(monthName, isNewMonth, days))
+        
+        lastMonth = currentMonth
+        cal.add(Calendar.WEEK_OF_YEAR, -1) // Go backwards in time
+    }
+    
     return weeks
 }
 

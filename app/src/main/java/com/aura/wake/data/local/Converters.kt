@@ -30,4 +30,18 @@ class Converters {
         val type = object : TypeToken<Set<Int>>() {}.type
         return Gson().fromJson(value, type) ?: emptySet()
     }
+
+    @TypeConverter
+    fun fromWakeStatus(value: com.aura.wake.data.model.WakeStatus): String {
+        return value.name
+    }
+
+    @TypeConverter
+    fun toWakeStatus(value: String): com.aura.wake.data.model.WakeStatus {
+        return try {
+            com.aura.wake.data.model.WakeStatus.valueOf(value)
+        } catch (e: Exception) {
+            com.aura.wake.data.model.WakeStatus.MISSED
+        }
+    }
 }
