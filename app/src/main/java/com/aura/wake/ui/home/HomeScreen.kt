@@ -172,9 +172,9 @@ fun HomeScreen(
                         containerColor = Color(0xFFFF5252), // Bright Red
                         contentColor = Color.White,
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                        modifier = Modifier.size(56.dp) // Standard FAB size
+                        modifier = Modifier.size(48.dp) // Smaller size to avoid overlap
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Alarm", modifier = Modifier.size(24.dp))
+                        Icon(Icons.Default.Add, contentDescription = "Add Alarm", modifier = Modifier.size(22.dp))
                     }
                 }
             },
@@ -182,7 +182,7 @@ fun HomeScreen(
         ) { padding ->
             val contentPadding = PaddingValues(
                 top = padding.calculateTopPadding(),
-                bottom = 80.dp // Adjusted for smaller floating bottom bar
+                bottom = 100.dp // Increased to accommodate FAB + bottom nav (24dp nav padding + 60dp nav height + 16dp spacing)
             )
 
             Box(modifier = Modifier.fillMaxSize()) {
