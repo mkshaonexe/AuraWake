@@ -16,6 +16,9 @@ interface SettingsRepository {
     
     fun getQrMissionConfig(): com.aura.wake.data.model.QrMissionConfig
     fun saveQrMissionConfig(config: com.aura.wake.data.model.QrMissionConfig)
+    
+    fun getMemoryMissionConfig(): com.aura.wake.data.model.MemoryMissionConfig
+    fun saveMemoryMissionConfig(config: com.aura.wake.data.model.MemoryMissionConfig)
 
     fun getOverlayImageUri(): String?
     fun saveOverlayImageUri(uri: String?)
@@ -93,6 +96,25 @@ class SharedPreferencesSettingsRepository(private val context: Context) : Settin
     override fun saveQrMissionConfig(config: com.aura.wake.data.model.QrMissionConfig) {
          prefs.edit {
             putString("mission_qr_config", gson.toJson(config))
+        }
+    }
+
+    override fun getMemoryMissionConfig(): com.aura.wake.data.model.MemoryMissionConfig {
+        val json = prefs.getString("mission_memory_config", null)
+        return if (json != null) {
+            try {
+                gson.fromJson(json, com.aura.wake.data.model.MemoryMissionConfig::class.java)
+            } catch (e: Exception) {
+                com.aura.wake.data.model.MemoryMissionConfig()
+            }
+        } else {
+            com.aura.wake.data.model.MemoryMissionConfig()
+        }
+    }
+
+    override fun saveMemoryMissionConfig(config: com.aura.wake.data.model.MemoryMissionConfig) {
+        prefs.edit {
+            putString("mission_memory_config", gson.toJson(config))
         }
     }
 

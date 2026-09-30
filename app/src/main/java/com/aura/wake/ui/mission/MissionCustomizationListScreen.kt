@@ -62,6 +62,14 @@ fun MissionCustomizationListScreen(navController: NavController) {
             }
             item {
                 MissionSettingItem(
+                    title = "Memory Mission",
+                    subtitle = "Configure tile grid difficulty and rounds",
+                    icon = Icons.Default.Apps,
+                    onClick = { navController.navigate("mission_settings/${ChallengeType.MEMORY.name}") }
+                )
+            }
+            item {
+                MissionSettingItem(
                     title = "QR Code Mission",
                     subtitle = "Save a specific QR code to scan",
                     icon = Icons.Default.QrCodeScanner,

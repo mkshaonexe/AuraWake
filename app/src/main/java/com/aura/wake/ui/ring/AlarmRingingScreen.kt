@@ -201,6 +201,7 @@ fun AlarmRingingContent(
     val mathConfig = remember { settingsRepository.getMathMissionConfig() }
     val typingConfig = remember { settingsRepository.getTypingMissionConfig() }
     val qrConfig = remember { settingsRepository.getQrMissionConfig() }
+    val memoryConfig = remember { settingsRepository.getMemoryMissionConfig() }
     
     val overlayUri = remember { settingsRepository.getOverlayImageUri() }
     
@@ -219,6 +220,11 @@ fun AlarmRingingContent(
             )
             ChallengeType.QR -> com.aura.wake.ui.ring.challenges.QRChallenge(
                 targetContent = qrConfig.qrContent,
+                onCompleted = onDismiss
+            )
+            ChallengeType.MEMORY -> com.aura.wake.ui.ring.challenges.MemoryChallenge(
+                difficulty = memoryConfig.difficulty,
+                questionCount = memoryConfig.questionCount,
                 onCompleted = onDismiss
             )
             else -> onDismiss() 
@@ -240,6 +246,12 @@ fun AlarmRingingContent(
                 ChallengeType.QR -> com.aura.wake.ui.ring.challenges.QRChallenge(
                     targetContent = qrConfig.qrContent,
                     onCompleted = onDismiss
+                )
+                ChallengeType.MEMORY -> com.aura.wake.ui.ring.challenges.MemoryChallenge(
+                    difficulty = memoryConfig.difficulty,
+                    questionCount = memoryConfig.questionCount,
+                    onCompleted = onDismiss,
+                    onClose = onClosePreview
                 )
                 else -> onDismiss()
             }

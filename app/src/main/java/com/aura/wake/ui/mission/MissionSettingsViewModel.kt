@@ -26,6 +26,10 @@ class MissionSettingsViewModel(
     var qrContent by mutableStateOf<String?>(null)
     var qrLabel by mutableStateOf<String?>(null)
 
+    // Memory Mission State
+    var memoryDifficulty by mutableStateOf(Difficulty.MEDIUM)
+    var memoryQuestionCount by mutableStateOf(3)
+
     init {
         loadSettings()
     }
@@ -42,6 +46,10 @@ class MissionSettingsViewModel(
         val qrConfig = settingsRepository.getQrMissionConfig()
         qrContent = qrConfig.qrContent
         qrLabel = qrConfig.qrLabel
+
+        val memoryConfig = settingsRepository.getMemoryMissionConfig()
+        memoryDifficulty = memoryConfig.difficulty
+        memoryQuestionCount = memoryConfig.questionCount
     }
 
     fun saveMathSettings(difficulty: Difficulty, count: Int) {
@@ -60,5 +68,11 @@ class MissionSettingsViewModel(
         qrContent = content
         qrLabel = label
         settingsRepository.saveQrMissionConfig(QrMissionConfig(content, label))
+    }
+
+    fun saveMemorySettings(difficulty: Difficulty, count: Int) {
+        memoryDifficulty = difficulty
+        memoryQuestionCount = count
+        settingsRepository.saveMemoryMissionConfig(com.aura.wake.data.model.MemoryMissionConfig(difficulty, count))
     }
 }

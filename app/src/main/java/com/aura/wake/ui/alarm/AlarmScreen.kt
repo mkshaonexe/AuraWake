@@ -446,33 +446,41 @@ fun AlarmScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         val modifier = Modifier.weight(1f)
                         ChallengeOption(
                             type = ChallengeType.MATH, 
                             isSelected = selectedChallenge == ChallengeType.MATH,
-                            onClick = { selectedChallenge = ChallengeType.MATH },
+                            onClick = { selectedChallenge = if (selectedChallenge == ChallengeType.MATH) ChallengeType.NONE else ChallengeType.MATH },
+                            modifier = modifier
+                        )
+                        ChallengeOption(
+                            type = ChallengeType.MEMORY, 
+                            isSelected = selectedChallenge == ChallengeType.MEMORY,
+                            onClick = { selectedChallenge = if (selectedChallenge == ChallengeType.MEMORY) ChallengeType.NONE else ChallengeType.MEMORY },
                             modifier = modifier
                         )
                         ChallengeOption(
                             type = ChallengeType.TYPING, 
                             isSelected = selectedChallenge == ChallengeType.TYPING,
-                            onClick = { selectedChallenge = ChallengeType.TYPING },
+                            onClick = { selectedChallenge = if (selectedChallenge == ChallengeType.TYPING) ChallengeType.NONE else ChallengeType.TYPING },
                             modifier = modifier
                         )
                         ChallengeOption(
                             type = ChallengeType.SHAKE, 
                             isSelected = selectedChallenge == ChallengeType.SHAKE,
-                            onClick = { selectedChallenge = ChallengeType.SHAKE },
+                            onClick = { selectedChallenge = if (selectedChallenge == ChallengeType.SHAKE) ChallengeType.NONE else ChallengeType.SHAKE },
                             modifier = modifier
                         )
                         ChallengeOption(
                             type = ChallengeType.QR, 
                             isSelected = selectedChallenge == ChallengeType.QR,
                             onClick = { 
-                                if (cameraPermissionState.status.isGranted) {
+                                if (selectedChallenge == ChallengeType.QR) {
+                                    selectedChallenge = ChallengeType.NONE
+                                } else if (cameraPermissionState.status.isGranted) {
                                     selectedChallenge = ChallengeType.QR 
                                 } else {
                                     cameraPermissionState.launchPermissionRequest()
@@ -603,6 +611,7 @@ fun ChallengeOption(type: ChallengeType, isSelected: Boolean, onClick: () -> Uni
     ) {
          val label = when(type) {
              ChallengeType.MATH -> "Math"
+             ChallengeType.MEMORY -> "Memory"
              ChallengeType.TYPING -> "Type"
              ChallengeType.SHAKE -> "Shake"
              ChallengeType.QR -> "QR"
