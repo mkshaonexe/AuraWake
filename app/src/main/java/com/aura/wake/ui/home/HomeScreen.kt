@@ -115,7 +115,6 @@ fun HomeScreen(
     viewModel: AlarmViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val alarms by viewModel.allAlarms.collectAsState()
-    var selectedTab by remember { mutableIntStateOf(0) }
     val context = LocalContext.current
 
     val analyticsManager = remember {
@@ -130,161 +129,55 @@ fun HomeScreen(
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                // Show TopBar only for Home tab, or customize per tab. 
-                // Profile has its own TopBar.
-                if (selectedTab == 0) {
-                    TopAppBar(
-                        navigationIcon = {
-                            IconButton(onClick = { navController.navigate("settings_menu") }) {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    contentDescription = "Menu",
-                                    tint = Color.White
-                                )
-                            }
-                        },
-                        title = { 
-                            Text(
-                                "AuraWake", 
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontSize = 24.sp
-                            ) 
-                        },
-                        actions = {
-                            IconButton(onClick = { /* Handle notification click */ }) {
-                                Icon(
-                                    imageVector = Icons.Default.Notifications,
-                                    contentDescription = "Notifications",
-                                    tint = Color.White
-                                )
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Black
-                        )
+                TopAppBar(
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigate("settings_menu") }) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Settings",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    title = { 
+                        Text(
+                            "AuraWake", 
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 24.sp
+                        ) 
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Black
                     )
-                }
+                )
             },
             floatingActionButton = {
-                if (selectedTab == 0) {
-                    FloatingActionButton(
-                        onClick = { navController.navigate("create_alarm") },
-                        containerColor = Color(0xFFFF5252), // Bright Red
-                        contentColor = Color.White,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .size(48.dp) // Smaller size to avoid overlap
-                            .offset(y = (-100).dp) // Move FAB up to avoid bottom nav overlap
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Alarm", modifier = Modifier.size(22.dp))
-                    }
+                FloatingActionButton(
+                    onClick = { navController.navigate("create_alarm") },
+                    containerColor = Color(0xFFFF5252), // Bright Red
+                    contentColor = Color.White,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Alarm", modifier = Modifier.size(26.dp))
                 }
             },
             floatingActionButtonPosition = androidx.compose.material3.FabPosition.End
         ) { padding ->
             val contentPadding = PaddingValues(
                 top = padding.calculateTopPadding(),
-                bottom = 100.dp // Increased to accommodate FAB + bottom nav (24dp nav padding + 60dp nav height + 16dp spacing)
+                bottom = padding.calculateBottomPadding() + 80.dp
             )
 
-            Box(modifier = Modifier.fillMaxSize()) {
-                when (selectedTab) {
-                    0 -> HomeTabContent(
-                        alarms = alarms,
-                        nextAlarmString = nextAlarmString,
-                        viewModel = viewModel,
-                        navController = navController,
-                        contentPadding = contentPadding,
-                        analyticsManager = analyticsManager
-                    )
-                    1 -> HistoryTabContent(contentPadding)
-                    2 -> SettingsTabContent(contentPadding) 
-                    // Case 3 (Profile) is handled via navigation now
-                }
-            }
-        }
-
-        // Custom Floating Bottom Navigation
-        CustomBottomNavigation(
-            selectedTab = selectedTab,
-            onTabSelected = { index ->
-                when (index) {
-                    0 -> selectedTab = 0
-                    1 -> navController.navigate("community")
-                    2 -> navController.navigate("friends")
-                    3 -> navController.navigate("profile")
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp)
-        )
-    }
-}
-
-
-
-
-@Composable
-fun CustomBottomNavigation(
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .height(60.dp) // Reduced from 72.dp
-            .width(280.dp), // Reduced from 300.dp
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1C1C1E).copy(alpha = 0.8f) // Glassy Dark tint
-        ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)), // Glass border
-        elevation = CardDefaults.cardElevation(0.dp) // Remove shadow for flat glass look, or keep low
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val icons = listOf(
-                Icons.Default.Home,          // Home
-                Icons.Default.Public,        // Community
-                Icons.Default.Group,         // Friends 
-                Icons.Default.Person         // Profile
+            HomeTabContent(
+                alarms = alarms,
+                nextAlarmString = nextAlarmString,
+                viewModel = viewModel,
+                navController = navController,
+                contentPadding = contentPadding,
+                analyticsManager = analyticsManager
             )
-            
-            icons.forEachIndexed { index, icon ->
-                val isSelected = selectedTab == index
-                
-                // Active Indicator
-                val backgroundModifier = if (isSelected) {
-                    Modifier.background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(PrimaryRed, AccentOrange) // Liquid Gradient
-                        )
-                    )
-                } else {
-                    Modifier.background(Color.Transparent)
-                }
-                
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .then(backgroundModifier)
-                        .clickable { onTabSelected(index) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = if (isSelected) Color.White else Color.Gray,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
         }
     }
 }
@@ -592,100 +485,6 @@ fun HomeTabContent(
     }
 }
 
-
-@Composable
-fun HistoryTabContent(contentPadding: PaddingValues) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.Start
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            "Sleep History", 
-            fontSize = 28.sp, 
-            fontWeight = FontWeight.Bold, 
-            color = Color.White
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Placeholder UI
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
-                .background(Color(0xFF1C1C1E)),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    Icons.Default.PieChart, 
-                    contentDescription = null, 
-                    tint = Color.Gray, 
-                    modifier = Modifier.size(64.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("No sleep data available yet", color = Color.Gray)
-            }
-        }
-    }
-}
-
-@Composable
-fun SettingsTabContent(contentPadding: PaddingValues) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.Start
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            "Tasks", 
-            fontSize = 28.sp, 
-            fontWeight = FontWeight.Bold, 
-            color = Color.White
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Placeholder UI for Tasks
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            repeat(3) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
-                        .background(Color(0xFF1C1C1E)),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .border(2.dp, Color.Gray, androidx.compose.foundation.shape.CircleShape)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Box(modifier = Modifier.height(14.dp).width(120.dp).background(Color.Gray.copy(alpha = 0.3f), androidx.compose.foundation.shape.RoundedCornerShape(4.dp)))
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Box(modifier = Modifier.height(10.dp).width(80.dp).background(Color.Gray.copy(alpha = 0.2f), androidx.compose.foundation.shape.RoundedCornerShape(4.dp)))
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ... [Keep getNextAlarmString and AlarmCard helper functions as they were, copy them here needed]
 private fun getNextAlarmString(alarms: List<Alarm>): String {
     val activeAlarms = alarms.filter { it.isEnabled }
     if (activeAlarms.isEmpty()) return ""

@@ -1,7 +1,5 @@
 package com.aura.wake
 
-import io.github.jan.supabase.auth.handleDeeplinks
-
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -28,10 +26,6 @@ import androidx.compose.runtime.DisposableEffect
 import com.aura.wake.ui.AppViewModelProvider
 import androidx.navigation.compose.navigation
 import com.aura.wake.ui.menu.MenuScreen
-import com.aura.wake.ui.update.UpdateViewModel
-import com.aura.wake.ui.components.UpdateAvailableDialog
-import androidx.compose.runtime.collectAsState
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 class MainActivity : ComponentActivity() {
@@ -51,9 +45,6 @@ class MainActivity : ComponentActivity() {
                 android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
-
-        // Handle Supabase Auth Callback (if app launched via deep link)
-        com.aura.wake.data.remote.SupabaseClient.client.handleDeeplinks(intent)
 
         enableEdgeToEdge()
         // Force light status bar icons (visible on dark background)
@@ -153,49 +144,12 @@ class MainActivity : ComponentActivity() {
                 val settingsRepository = (context.applicationContext as com.aura.wake.AlarmApplication).container.settingsRepository
                 val isFirstRun = remember { settingsRepository.isFirstRun() }
 
-                // Log Initial Permission Status
                 LaunchedEffect(Unit) {
                    analyticsManager.logPermissionStatus("notification", hasNotificationPermission) 
                    analyticsManager.logPermissionStatus("overlay", hasOverlayPermission)
                 }
-                
-                // Update Checking
-                val updateViewModel: UpdateViewModel = viewModel(
-                    factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                            return UpdateViewModel(context) as T
-                        }
-                    }
-                )
-                
-                val showUpdateDialog by updateViewModel.showUpdateDialog.collectAsState()
-                val versionInfo by updateViewModel.versionInfo.collectAsState()
-                
-                // Check for updates on app start
-                LaunchedEffect(Unit) {
-                    updateViewModel.checkForUpdates()
-                }
-                
-                // Show update dialog if available
-                if (showUpdateDialog && versionInfo != null) {
-                    UpdateAvailableDialog(
-                        versionInfo = versionInfo!!,
-                        onUpdate = {
-                            updateViewModel.openPlayStore()
-                            analyticsManager.logEvent("update_initiated", mapOf(
-                                "from_version" to versionInfo!!.currentVersionName,
-                                "to_version" to versionInfo!!.latestVersionName
-                            ))
-                        },
-                        onDismiss = {
-                            updateViewModel.dismissUpdate()
-                            analyticsManager.logEvent("update_dismissed", mapOf(
-                                "version" to versionInfo!!.latestVersionName
-                            ))
-                        }
-                    )
-                }
+
+
 
 
                 val startDestination = if (isRinging) {
@@ -235,9 +189,6 @@ class MainActivity : ComponentActivity() {
                     composable("customize_ringtone") {
                         com.aura.wake.ui.menu.CustomizeRingtoneScreen(navController = navController)
                     }
-                    composable("early_access_form") {
-                        com.aura.wake.ui.menu.EarlyAccessFormScreen(navController = navController)
-                    }
                     composable("pick_ringtone") {
                          com.aura.wake.ui.menu.CustomizeRingtoneScreen(navController = navController, isPicker = true)
                     }
@@ -264,15 +215,6 @@ class MainActivity : ComponentActivity() {
                             else -> 
                                 com.aura.wake.ui.mission.MathMissionSettingsScreen(navController = navController) // Fallback
                         }
-                    }
-                    composable("profile") {
-                        com.aura.wake.ui.profile.ProfileScreen(navController = navController)
-                    }
-                    composable("community") {
-                        com.aura.wake.ui.community.CommunityScreen(navController = navController)
-                    }
-                    composable("friends") {
-                        com.aura.wake.ui.friends.FriendsScreen(navController = navController)
                     }
                     composable("overlay_permission") {
                         com.aura.wake.ui.permission.OverlayPermissionScreen(
@@ -421,9 +363,6 @@ class MainActivity : ComponentActivity() {
         setIntent(intent) // Update the intent 
         intentState = intent
         android.util.Log.d("MainActivity", "🔔 onNewIntent - updated intentState")
-        
-        // Handle Supabase Auth Callback
-        com.aura.wake.data.remote.SupabaseClient.client.handleDeeplinks(intent)
     }
     
     // Prevent user from leaving the app when alarm is ringing
