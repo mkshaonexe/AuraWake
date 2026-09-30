@@ -17,7 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -73,7 +73,7 @@ fun OnboardingMissionScreen(
             )
              MissionItem(
                 title = "Memory",
-                icon = Icons.Default.Apps,
+                icon = Icons.Default.GridView,
                 isSelected = selectedChallenge == ChallengeType.MEMORY,
                 onClick = { selectedChallenge = ChallengeType.MEMORY }
             )
