@@ -22,6 +22,25 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.AccessAlarm
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.Snooze
+import androidx.compose.ui.graphics.graphicsLayer
+import com.aura.wake.ui.overlay.OverlayBackground
+import com.aura.wake.ui.overlay.OverlayPresets
+import java.text.SimpleDateFormat
+import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,7 +52,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.material.icons.filled.AccessAlarm // Added
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -46,9 +64,9 @@ import com.aura.wake.R
 import com.aura.wake.data.alarm.AlarmService
 import com.aura.wake.data.alarm.SnoozeReceiver
 import com.aura.wake.data.model.ChallengeType
-import androidx.compose.material3.IconButton // Added
-import androidx.compose.material.icons.Icons // Added for convenience if needed, but specific is better
-import androidx.compose.material.icons.filled.Close // Added
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import java.util.Calendar
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.CoroutineScope
@@ -273,98 +291,160 @@ fun AlarmRingingContent(
             }
          }
     } else {
-        // Main Ringing UI (Moon Theme)
+        // Main Ringing UI (Modern Aura Theme)
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
-            // Full Screen Background Image if Overlay Set
-            if (overlayUri != null) {
-                 coil.compose.AsyncImage(
-                    model = overlayUri,
-                    contentDescription = "Custom Overlay",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-                // Dark Overlay for readability
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.4f))
-                )
-            }
+            // Full Screen Background (Presets or Custom Wallpaper with high contrast scrim)
+            OverlayBackground(
+                overlayUri = overlayUri,
+                modifier = Modifier.fillMaxSize(),
+                animatePulse = true
+            )
             
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 48.dp),
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.weight(0.3f))
+                Spacer(modifier = Modifier.weight(0.15f))
 
-                // Big Time
+                // Date Display (e.g. WEDNESDAY, SEPTEMBER 30)
+                val dateText = remember {
+                    SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(currentTime.time)
+                }
+                Text(
+                    text = dateText.uppercase(),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.5.sp,
+                    color = Color.White.copy(alpha = 0.75f)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Big Clean Digital Clock
                 Text(
                     text = String.format("%02d:%02d", currentTime.get(Calendar.HOUR_OF_DAY), currentTime.get(Calendar.MINUTE)),
-                    fontSize = 86.sp,
+                    fontSize = 82.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     letterSpacing = (-2).sp
                 )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Moon Image with Snooze
-                Box(
-                    modifier = Modifier.size(300.dp),
-                    contentAlignment = Alignment.Center
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Status chip: "ALARM RINGING"
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = Color.White.copy(alpha = 0.12f),
+                    modifier = Modifier.height(28.dp)
                 ) {
-                    // Moon Graphic Placeholder - Pure rounded Circle, ONLY show if NO overlay
-                    if (overlayUri == null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 14.dp)
+                    ) {
                         Box(
                             modifier = Modifier
-                                .size(280.dp)
+                                .size(8.dp)
                                 .clip(CircleShape)
-                                .background(Color.DarkGray)
-                        ) {
-                             Text("🌑", fontSize = 200.sp, modifier = Modifier.align(Alignment.Center))
-                        }
-                    } else {
-                        // Invisible spacer to keep layout standard
-                         Spacer(modifier = Modifier.size(280.dp))
-                    }
-                    
-                    // Snooze Button Floating Over Moon (Bottom)
-                    Surface(
-                        onClick = onSnooze,
-                        shape = RoundedCornerShape(percent = 50),
-                        color = Color.White,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 32.dp)
-                            .height(56.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 32.dp)
-                        ) {
-                            Text(
-                                "3", 
-                                color = Color.White, 
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                modifier = Modifier
-                                    .background(Color.Black, CircleShape)
-                                    .padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                            Spacer(modifier = Modifier.size(12.dp))
-                            Text("Snooze", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        }
+                                .background(Color(0xFFFF5252))
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "ALARM RINGING",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
                     }
                 }
-                
-                Spacer(modifier = Modifier.weight(1f))
-                
+
+                Spacer(modifier = Modifier.weight(0.35f))
+
+                // Center Graphic Area:
+                // Minimal breathing Aura Ring if preset theme; clean unobstructed view if custom photo
+                if (OverlayPresets.isPreset(overlayUri)) {
+                    val infiniteTransition = rememberInfiniteTransition(label = "pulse_ring")
+                    val ringScale by infiniteTransition.animateFloat(
+                        initialValue = 0.94f,
+                        targetValue = 1.06f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(2800, easing = FastOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "ringScale"
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(170.dp)
+                            .graphicsLayer(scaleX = ringScale, scaleY = ringScale)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.05f))
+                            .border(1.5.dp, Color.White.copy(alpha = 0.15f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(115.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.08f))
+                                .border(1.dp, Color.White.copy(alpha = 0.25f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AccessTime,
+                                contentDescription = null,
+                                tint = Color.White.copy(alpha = 0.9f),
+                                modifier = Modifier.size(44.dp)
+                            )
+                        }
+                    }
+                } else {
+                    Spacer(modifier = Modifier.size(170.dp))
+                }
+
+                Spacer(modifier = Modifier.weight(0.7f))
+
+                // Snooze Button - Sleek Frosted Pill
+                Surface(
+                    onClick = onSnooze,
+                    shape = RoundedCornerShape(50),
+                    color = Color.White.copy(alpha = 0.92f),
+                    modifier = Modifier
+                        .fillMaxWidth(0.65f)
+                        .height(52.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Snooze,
+                            contentDescription = "Snooze",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Snooze",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 // Dismiss Button - Bottom Red Pill
                 Button(
                     onClick = {
@@ -378,11 +458,12 @@ fun AlarmRingingContent(
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(72.dp)
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .height(64.dp)
                 ) {
-                    Text("Dismiss", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Dismiss", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
             }
             
             // Close Button for Preview (Main Screen)
@@ -391,8 +472,8 @@ fun AlarmRingingContent(
                     onClick = onClosePreview,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
+                        .statusBarsPadding()
                         .padding(16.dp)
-                        .padding(top = 24.dp)
                 ) {
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.Default.Close,
