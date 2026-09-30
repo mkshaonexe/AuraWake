@@ -261,6 +261,8 @@ class MainActivity : ComponentActivity() {
                                 com.aura.wake.ui.mission.TypingMissionSettingsScreen(navController = navController)
                             com.aura.wake.data.model.ChallengeType.QR ->
                                 com.aura.wake.ui.mission.QrMissionSettingsScreen(navController = navController)
+                            com.aura.wake.data.model.ChallengeType.MEMORY ->
+                                com.aura.wake.ui.mission.MemoryMissionSettingsScreen(navController = navController)
                             else -> 
                                 com.aura.wake.ui.mission.MathMissionSettingsScreen(navController = navController) // Fallback
                         }

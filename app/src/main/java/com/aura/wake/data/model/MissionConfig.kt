@@ -23,4 +23,9 @@ data class QrMissionConfig(
     val qrLabel: String? = null
 )
 
+data class MemoryMissionConfig(
+    val difficulty: Difficulty = Difficulty.MEDIUM,
+    val questionCount: Int = 3
+)
+
 // Wrapper for all mission configs if needed, or we just retrieve them individually via ChallengeType

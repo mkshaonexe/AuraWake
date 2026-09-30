@@ -17,7 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -72,12 +72,10 @@ fun OnboardingMissionScreen(
                 onClick = { selectedChallenge = ChallengeType.MATH }
             )
              MissionItem(
-                title = "Find Color Tiles",
-                icon = Icons.Default.GridView,
-                isSelected = false, // Challenge type missing for Color Tiles? Enum says: NONE, MATH, SHAKE, QR, TYPING.
-                // Assuming Color Tiles is not implemented in Enum yet, skipping or mapping to NONE/Similar.
-                // Let's implement TYPING instead as per enum.
-                onClick = { /* Not in enum */ }
+                title = "Memory",
+                icon = Icons.Default.Apps,
+                isSelected = selectedChallenge == ChallengeType.MEMORY,
+                onClick = { selectedChallenge = ChallengeType.MEMORY }
             )
             MissionItem(
                 title = "Typing",

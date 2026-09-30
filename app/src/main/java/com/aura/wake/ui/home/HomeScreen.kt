@@ -101,6 +101,7 @@ import com.aura.wake.data.model.ChallengeType
 private fun getChallengeIcon(type: ChallengeType): ImageVector? {
     return when (type) {
         ChallengeType.MATH -> Icons.Default.Calculate
+        ChallengeType.MEMORY -> Icons.Default.Apps
         ChallengeType.TYPING -> Icons.Default.Keyboard
         ChallengeType.SHAKE -> Icons.Default.Smartphone
         ChallengeType.QR -> Icons.Default.QrCode

@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 import java.util.UUID
 
 enum class ChallengeType {
-    NONE, MATH, SHAKE, QR, TYPING
+    NONE, MATH, SHAKE, QR, TYPING, MEMORY
 }
 
 @Entity(tableName = "alarms")

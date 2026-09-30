@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Apps
 
 @Composable
 fun AlarmOverviewDialog(
@@ -262,6 +263,7 @@ fun AlarmOverviewDialog(
 private fun getChallengeIcon(type: ChallengeType): ImageVector? {
     return when (type) {
         ChallengeType.MATH -> Icons.Default.Calculate
+        ChallengeType.MEMORY -> Icons.Default.Apps
         ChallengeType.TYPING -> Icons.Default.Keyboard
         ChallengeType.SHAKE -> Icons.Default.Smartphone
         ChallengeType.QR -> Icons.Default.QrCode
